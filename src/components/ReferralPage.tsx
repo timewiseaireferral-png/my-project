@@ -77,7 +77,7 @@ const ReferralPage: React.FC = () => {
   const referralBaseUrl = 'https://writingmate.co/signup'; 
   const referralLink = profile?.referral_code ? `${referralBaseUrl}?ref=${profile.referral_code}` : 'Loading...';
 
-  useEffect(() => {
+  useEffect(( ) => {
     const fetchProfile = async () => {
       if (!user) {
         setLoading(false);
