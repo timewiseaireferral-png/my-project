@@ -412,7 +412,7 @@ function AppContent() {
               <StandardHeader onSignInClick={handleSignInClick} onSignUpClick={handleSignUpClick} />
               <div className="pt-20"></div>
               <div className="main-route-content">
-                <PricingPage />
+                <PricingPageNew />
               </div>
             </>
           } />
