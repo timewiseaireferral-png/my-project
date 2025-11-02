@@ -296,7 +296,7 @@ export function PricingPageNew() {
                 Refer a Friend, Get Rewarded
               </h2>
                 <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
-                  As a paying customer, you have the exclusive opportunity to refer friends and earn rewards.
+                  As a Pro subscriber, you can refer friends and earn rewards.
                 </p>
             </div>
 
