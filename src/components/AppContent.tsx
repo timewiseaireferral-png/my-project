@@ -65,8 +65,6 @@ function AppContent() {
 
   // Writing state
   const [content, setContent] = useState('');
-  // src/components/AppContent.tsx (Line 62)
-  // Before: const [textType, setTextType] = useState('');
   const [textType, setTextType] = useState('narrative'); 
   const [assistanceLevel, setAssistanceLevel] = useState('detailed');
   const [timerStarted, setTimerStarted] = useState(false);
@@ -239,8 +237,6 @@ function AppContent() {
       
       // Clear content and reset state
       setContent('');
-      // src/components/AppContent.tsx (Line 234)
-      // Before: setTextType('');
       setTextType('narrative'); 
       setPopupFlowCompleted(false);
       
