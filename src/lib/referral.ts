@@ -65,7 +65,7 @@ export function generateReferralLink(referralCode: string): string {
   // Assuming the base URL is the current window location, or a known environment variable
   // For simplicity, we'll use a placeholder and assume the app handles the routing
   const baseUrl = window.location.origin;
-  return `${baseUrl}/?ref=${referralCode}`;
+  return `${baseUrl}/signup?ref=${referralCode}`;
 }
 
 /**
