@@ -8,11 +8,13 @@ import './layout-fix.css';
 
 // Add this import at the top with other imports
 import { EnhancedWritingLayoutNSW } from './EnhancedWritingLayoutNSW';
+import { LearningPage } from './LearningPage';
 import { EnhancedLearningHub } from './EnhancedLearningHub';
 import { LessonDetail } from './LessonDetail';
 import { LessonCard } from './LessonCard';
 
 import { NavBar } from './NavBar';
+import { StandardHeader } from './StandardHeader'; // <-- NEW IMPORT
 import { HomePage } from './HomePage';
 import { HeroSection } from './HeroSection';
 import { FeaturesSection } from './FeaturesSection';
@@ -23,6 +25,7 @@ import { HowItWorksSection } from './HowItWorksSection';
 import { EnhancedSuccessSection } from './EnhancedSuccessSection';
 import { Footer } from './Footer';
 import { PaymentSuccessPage } from './PaymentSuccessPage';
+import { PricingPage } from './PricingPage';
 import { PricingPageNew } from './PricingPageNew';
 import { Dashboard } from './Dashboard';
 import { AuthModal } from './AuthModal';
@@ -248,193 +251,126 @@ function AppContent() {
     } else if (!user && hasSignedIn) {
       // User signed out
       setHasSignedIn(false);
+      // Clear all local storage related to writing session
+      localStorage.removeItem('generatedPrompt');
+      localStorage.removeItem('customPrompt');
+      localStorage.removeItem('selectedWritingType');
+      localStorage.removeItem('writingContent');
+      localStorage.removeItem('elapsedTime');
+      localStorage.removeItem('timerStarted');
+      // Navigate to home page after sign out
+      navigate('/');
     }
-  }, [user, hasSignedIn, activePage]);
+  }, [user, hasSignedIn, activePage, navigate]);
 
-  useEffect(() => {
-    const fetchOpenAIStatus = async () => {
-      setOpenAILoading(true);
-      const status = await checkOpenAIConnectionStatus();
-      setOpenAIConnected(status.is_connected);
-      setOpenAILoading(false);
-    };
-
-    fetchOpenAIStatus();
-  }, []);
-
-  // Check for payment success in URL on mount
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentSuccess = urlParams.get('paymentSuccess') === 'true' || urlParams.get('payment_success') === 'true';
-    const planType = urlParams.get('planType') || urlParams.get('plan');
-    const userEmail = urlParams.get('email');
-    
-    if (paymentSuccess && planType) {
-      console.log('[DEBUG] Payment success detected for plan:', planType);
-      
-      // Store payment info
-      if (userEmail) {
-        localStorage.setItem('userEmail', userEmail);
-      }
-      localStorage.setItem('payment_plan', planType);
-      localStorage.setItem('payment_date', new Date().toISOString());
-      
-      // Clear URL parameters
-      window.history.replaceState({}, document.title, window.location.pathname);
-      
-      setShowPaymentSuccess(true);
-      setPendingPaymentPlan(planType);
-      setActivePage('payment-success');
-    }
-  }, []);
-
-  // Set active page based on current path
-  useEffect(() => {
-    const path = location.pathname.substring(1) || 'home';
-    if (path !== 'auth/callback') { // Don't change active page during auth callback
-      setActivePage(path);
-    }
-  }, [location.pathname]);
-
-  // Text selection logic for writing area
-  useEffect(() => {
-    const handleSelectionChange = () => {
-      const selection = window.getSelection();
-      if (selection && selection.toString().trim().length > 0) {
-        setSelectedText(selection.toString());
-      }
-    };
-
-    document.addEventListener('selectionchange', handleSelectionChange);
-    return () => document.removeEventListener('selectionchange', handleSelectionChange);
-  }, []);
-
+  // Handle navigation changes
   const handleNavigation = useCallback((page: string) => {
     console.log(`Navigating to: ${page}`);
     setActivePage(page);
     
-    if (page === 'home') {
-      navigate('/');
-    } else {
-      navigate(`/${page}`);
+    // Convert page name to path
+    let path = '/';
+    switch (page) {
+      case 'home':
+        path = '/';
+        break;
+      case 'features':
+        path = '/features';
+        break;
+      case 'pricing':
+        path = '/pricing';
+        break;
+      case 'about':
+        path = '/about';
+        break;
+      case 'faq':
+        path = '/faq';
+        break;
+      case 'dashboard':
+        path = '/dashboard';
+        break;
+      case 'settings':
+        path = '/settings';
+        break;
+      case 'writing':
+        path = '/writing';
+        break;
+      case 'exam':
+        path = '/exam';
+        break;
+      case 'learning':
+        path = '/learning';
+        break;
+      case 'signin':
+        path = '/sign-in';
+        break;
+      case 'signup':
+        path = '/sign-up';
+        break;
+      default:
+        path = `/${page}`;
+        break;
     }
+    navigate(path);
   }, [navigate]);
 
-  const handleGetStarted = useCallback(() => {
-    if (user) {
-      handleNavigation('dashboard');
-    } else {
-      setAuthModalMode('signup');
-      setShowAuthModal(true);
-    }
-  }, [user, handleNavigation]);
-
+  // Handle sign out
   const handleForceSignOut = useCallback(async () => {
-    try {
-      await authSignOut();
-      setActivePage('home');
-      navigate('/');
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
-  }, [authSignOut, navigate]);
+    console.log('Forcing sign out...');
+    await authSignOut();
+    // The useEffect hook above handles the rest of the sign-out logic (state reset, navigation)
+  }, [authSignOut]);
 
-  const handleTextTypeChange = useCallback((newTextType: string) => {
-    setTextType(newTextType);
-    localStorage.setItem('selectedWritingType', newTextType);
+  // Handle sign in/up clicks - now navigates to dedicated pages
+  const handleSignInClick = () => {
+    navigate('/sign-in');
+  };
+
+  const handleSignUpClick = () => {
+    navigate('/sign-up');
+  };
+
+  // Handle submit (e.g., from Exam Mode)
+  const handleSubmit = useCallback(() => {
+    // Logic to save content and navigate to feedback page
+    console.log('Submitting content for feedback...');
+    // For now, just navigate to a placeholder
+    navigate('/dashboard');
+  }, [navigate]);
+
+  // Helper functions for writing area
+  const handleToggleFocusMode = useCallback(() => setFocusMode(prev => !prev), []);
+  const handleToggleStructureGuide = useCallback(() => setShowStructureGuide(prev => !prev), []);
+  const handleToggleTips = useCallback(() => setShowTips(prev => !prev), []);
+  const handleTextTypeChange = useCallback((newType: string) => {
+    setTextType(newType);
+    localStorage.setItem('selectedWritingType', newType);
+  }, []);
+  const handlePopupCompleted = useCallback(() => setPopupFlowCompleted(true), []);
+
+  // Check OpenAI connection status
+  useEffect(() => {
+    const checkConnection = async () => {
+      const isConnected = await checkOpenAIConnectionStatus();
+      setOpenAIConnected(isConnected);
+      setOpenAILoading(false);
+    };
+    checkConnection();
   }, []);
 
-  const handleSubmit = useCallback((submittedContent: string) => {
-    console.log('Content submitted:', submittedContent.length, 'characters');
-  }, []);
-
-  const handlePopupCompleted = useCallback(() => {
-    try {
-      setPopupFlowCompleted(true);
-    } catch (error) {
-      console.error('Popup completion error:', error);
-    }
-  }, []);
-
-  // Toggle functions for the buttons
-  const handleTogglePlanningTool = useCallback(() => {
-    setShowPlanningTool(prev => !prev);
-  }, []);
-
-  const handleToggleStructureGuide = useCallback(() => {
-    setShowStructureGuide(prev => !prev);
-  }, []);
-
-  const handleToggleTips = useCallback(() => {
-    setShowTips(prev => !prev);
-  }, []);
-
-  const handleToggleExamMode = useCallback(() => {
-    setShowExamMode(prev => !prev);
-  }, []);
-
-  const handleToggleFocusMode = useCallback(() => {
-    setFocusMode(prev => !prev);
-  }, []);
-
-  // NAVIGATION FIX: Improved footer visibility logic
-  const shouldShowFooter = useCallback(() => {
-    // Show footer only on marketing pages and hide on application pages
-    const marketingPages = ['home', 'features', 'pricing', 'faq', 'about', 'learning', 'referral', 'payment-success'];
-    // The pricing page is a marketing page, but the user wants to remove the duplicate footer from it.
-    // Since the HomePage already renders the Footer, we need to ensure AppContent does not render it on the home route.
-    // The main app pages are: dashboard, writing, exam, settings.
-    const appPages = ['dashboard', 'writing', 'exam', 'settings'];
-    
-    // Check if the current page is a marketing page, and NOT an app page.
-    // We explicitly exclude the home page here because HomePage.tsx already renders the footer.
-    const isMarketingPage = marketingPages.includes(activePage) && !appPages.includes(activePage);
-    
-    // We want to show the footer on all marketing pages *except* the one that already includes it (HomePage)
-    // and *except* the pricing page if we assume the duplication was from AppContent rendering it.
-    // The safest approach is to only render it on pages that *don't* have it already.
-    // Let's assume the duplication was caused by HomePage rendering it, and AppContent rendering it again.
-    // Since we restored the Footer in HomePage, we should only render it in AppContent for pages that are not HomePage.
-    
-    // Let's check the current path:
-    const path = location.pathname.split('/').filter(Boolean)[0] || 'home';
-    
-    // Pages that should NOT have a footer rendered by AppContent:
-    // 1. Pages that render their own footer (e.g., home, pricing, if they are full-page marketing components)
-    // 2. Application pages (dashboard, writing, exam, settings)
-    const noAppContentFooter = ['/', 'home', 'dashboard', 'writing', 'exam', 'settings'];
-    
-    // The user wants the footer on all pages. Since HomePage renders it, and AppContent renders it globally,
-    // the duplication was on the home page. The pricing page must have been a full-page component that
-    // did NOT render the footer, and AppContent's global render was the only one.
-    // The user's request was to remove the duplicate footers.
-    // The duplicate was: CTA (inside Footer.tsx) + Main Footer (inside Footer.tsx) + Main Footer (from AppContent).
-    
-    // New strategy:
-    // 1. Footer.tsx: CTA is removed. Main Footer content is kept.
-    // 2. HomePage.tsx: Renders Footer.
-    // 3. AppContent.tsx: Should only render Footer on pages that are NOT HomePage and NOT app pages.
-    
-    const pagesThatShouldHaveAppContentFooter = ['features', 'faq', 'about', 'learning', 'referral', 'payment-success', 'pricing'];
-    
-    // Let's use the activePage state, which seems to be derived from the path.
-    // The original logic was: Don't show footer on app pages. This implies it was shown on all marketing pages.
-    // The duplication was likely because HomePage renders it, and AppContent renders it too.
-    
-    // Let's keep the original logic, and remove the explicit render from HomePage.tsx.
-    // But the user's new request is to have the footer on all pages.
-    
-    // Let's go with the safest assumption: The footer should be rendered by AppContent for all pages *except* the main app pages.
-    const appRoutes = ['dashboard', 'writing', 'exam', 'settings', 'feedback', 'evaluation'];
-    return !appRoutes.some(route => location.pathname.includes(route));
-  }, [location.pathname]);
+  // Determine if the footer should be shown
+  const shouldShowFooter = () => {
+    // Don't show footer on writing, exam, or dashboard pages
+    const noFooterPaths = ['/writing', '/exam', '/dashboard', '/settings', '/feedback', '/evaluation', '/referral'];
+    return !noFooterPaths.some(path => location.pathname.startsWith(path));
+  };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading application...</p>
         </div>
       </div>
     );
@@ -444,58 +380,106 @@ function AppContent() {
     <div className="app-content-wrapper bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="route-with-footer">
         <Routes>
+          {/* Public Pages with StandardHeader */}
           <Route path="/" element={
-            <div className="main-route-content">
-<HomePage onNavigate={handleNavigation} onSignInClick={() => {
-	              setAuthModalMode("signin");
-	              setShowAuthModal(true);
-	            }}
-	            onSignUpClick={() => {
-	              setAuthModalMode("signup");
-	              setShowAuthModal(true);
-	            }} />
-            </div>
+            <>
+              <StandardHeader onSignInClick={handleSignInClick} onSignUpClick={handleSignUpClick} />
+              <div className="pt-20"></div>
+              <div className="main-route-content">
+                <HomePage onNavigate={handleNavigation} onSignInClick={handleSignInClick} onSignUpClick={handleSignUpClick} />
+              </div>
+            </>
           } />
-          <Route path="/home" element={
-            <div className="main-route-content">
-<HomePage onNavigate={handleNavigation} onSignInClick={() => {
-	              setAuthModalMode("signin");
-	              setShowAuthModal(true);
-	            }}
-	            onSignUpClick={() => {
-	              setAuthModalMode("signup");
-	              setShowAuthModal(true);
-	            }} />
-            </div>
-          } />
+
           <Route path="/features" element={
             <>
-              <NavBar 
-                activePage={activePage}
-                onNavigate={handleNavigation}
-                user={user}
-                onSignInClick={() => {
-                  console.log('AppContent: onSignInClick called');
-                  setAuthModalMode('signin');
-                  setShowAuthModal(true);
-                  console.log('AppContent: Auth modal state set to open');
-                }}
-                onSignUpClick={() => {
-                  console.log('AppContent: onSignUpClick called');
-                  setAuthModalMode('signup');
-                  setShowAuthModal(true);
-                  console.log('AppContent: Auth modal state set to open');
-                }}
-                onForceSignOut={handleForceSignOut}
-              />
+              <StandardHeader onSignInClick={handleSignInClick} onSignUpClick={handleSignUpClick} />
+              <div className="pt-20"></div>
               <div className="main-route-content">
                 <FeaturesSection />
               </div>
             </>
           } />
-          <Route path="/pricing" element={<PricingPageNew />} />
-          <Route path="/faq" element={<FAQPage onNavigate={handleNavigation} />} />
-          <Route path="/about" element={<AboutPage onNavigate={handleNavigation} />} />
+
+          <Route path="/how-it-works" element={
+            <>
+              <StandardHeader onSignInClick={handleSignInClick} onSignUpClick={handleSignUpClick} />
+              <div className="pt-20"></div>
+              <div className="main-route-content">
+                <HowItWorksSection />
+              </div>
+            </>
+          } />
+
+          <Route path="/pricing" element={
+            <>
+              <StandardHeader onSignInClick={handleSignInClick} onSignUpClick={handleSignUpClick} />
+              <div className="pt-20"></div>
+              <div className="main-route-content">
+                <PricingPage />
+              </div>
+            </>
+          } />
+
+          <Route path="/faq" element={
+            <>
+              <StandardHeader onSignInClick={handleSignInClick} onSignUpClick={handleSignUpClick} />
+              <div className="pt-20"></div>
+              <div className="main-route-content">
+                <FAQPage onNavigate={handleNavigation} />
+              </div>
+            </>
+          } />
+
+          <Route path="/about" element={
+            <>
+              <StandardHeader onSignInClick={handleSignInClick} onSignUpClick={handleSignUpClick} />
+              <div className="pt-20"></div>
+              <div className="main-route-content">
+                <AboutPage onNavigate={handleNavigation} onSignInClick={handleSignInClick} onSignUpClick={handleSignUpClick} />
+              </div>
+            </>
+          } />
+
+          {/* Auth Pages with StandardHeader */}
+          <Route path="/sign-in" element={
+            <>
+              <StandardHeader onSignInClick={handleSignInClick} onSignUpClick={handleSignUpClick} />
+              <div className="pt-20"></div>
+              <div className="max-w-md mx-auto py-12">
+                <AuthModal
+                  isOpen={true}
+                  onClose={() => navigate('/')}
+                  mode={'signin'}
+                  onAuthSuccess={(user) => {
+                    console.log('Auth success callback received, closing modal');
+                    setHasSignedIn(true);
+                    navigate('/dashboard');
+                  }}
+                />
+              </div>
+            </>
+          } />
+          <Route path="/sign-up" element={
+            <>
+              <StandardHeader onSignInClick={handleSignInClick} onSignUpClick={handleSignUpClick} />
+              <div className="pt-20"></div>
+              <div className="max-w-md mx-auto py-12">
+                <AuthModal
+                  isOpen={true}
+                  onClose={() => navigate('/')}
+                  mode={'signup'}
+                  onAuthSuccess={(user) => {
+                    console.log('Auth success callback received, closing modal');
+                    setHasSignedIn(true);
+                    navigate('/dashboard');
+                  }}
+                />
+              </div>
+            </>
+          } />
+
+          {/* Authenticated Routes */}
           <Route path="/dashboard" element={
             user ? (
               <Dashboard 
@@ -582,14 +566,8 @@ function AppContent() {
                 activePage={activePage}
                 onNavigate={handleNavigation}
                 user={user}
-                onSignInClick={() => {
-                  setAuthModalMode('signin');
-                  setShowAuthModal(true);
-                }}
-                onSignUpClick={() => {
-                  setAuthModalMode('signup');
-                  setShowAuthModal(true);
-                }}
+                onSignInClick={handleSignInClick}
+                onSignUpClick={handleSignUpClick}
                 onForceSignOut={handleForceSignOut}
               />
               <div className="main-route-content">
@@ -613,19 +591,6 @@ function AppContent() {
           } />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-
-        {showAuthModal && (
-          <AuthModal
-            isOpen={showAuthModal}
-            onClose={() => setShowAuthModal(false)}
-            mode={authModalMode}
-            onAuthSuccess={(user) => {
-              console.log('Auth success callback received, closing modal');
-              setShowAuthModal(false);
-              setHasSignedIn(true);
-            }}
-          />
-        )}
 
         {shouldShowFooter() && <Footer onNavigate={handleNavigation} />}
       </div>
