@@ -94,20 +94,15 @@ const ReferralPage: React.FC = () => {
         console.error('Error fetching profile:', error);
       } else if (data) {
         let userProfile = data as UserProfile;
-        
-        // --- FIX: Generate referral code if it doesn't exist ---
-        if (!userProfile.referral_code) {
-          const newCode = user.id.substring(0, 8); // Simple 8-char code from user ID
-          const { error: updateError } = await supabase
-            .from('user_profiles')
-            .update({ referral_code: newCode })
-            .eq('id', user.id);
 
-          if (updateError) {
-            console.error('Error generating and updating referral code:', updateError);
-          } else {
-            userProfile = { ...userProfile, referral_code: newCode };
-          }
+        // --- FIX: Generate referral code in state if it doesn't exist, but do NOT update DB from frontend ---
+        if (!userProfile.referral_code) {
+          // Generate a temporary code for display purposes
+          const newCode = user.id.substring(0, 8); 
+          userProfile = { ...userProfile, referral_code: newCode };
+          
+          // NOTE: A separate, secure backend function should be responsible for persisting this code.
+          // The frontend will now display the generated code, which is the user's ID prefix.
         }
         // --- END FIX ---
 
