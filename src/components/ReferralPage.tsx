@@ -93,7 +93,25 @@ const ReferralPage: React.FC = () => {
       if (error) {
         console.error('Error fetching profile:', error);
       } else if (data) {
-        setProfile(data as UserProfile);
+        let userProfile = data as UserProfile;
+        
+        // --- FIX: Generate referral code if it doesn't exist ---
+        if (!userProfile.referral_code) {
+          const newCode = user.id.substring(0, 8); // Simple 8-char code from user ID
+          const { error: updateError } = await supabase
+            .from('user_profiles')
+            .update({ referral_code: newCode })
+            .eq('id', user.id);
+
+          if (updateError) {
+            console.error('Error generating and updating referral code:', updateError);
+          } else {
+            userProfile = { ...userProfile, referral_code: newCode };
+          }
+        }
+        // --- END FIX ---
+
+        setProfile(userProfile);
       }
       setLoading(false);
     };
