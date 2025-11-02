@@ -86,14 +86,13 @@ const ReferralPage: React.FC = () => {
 
       const { data, error } = await supabase
         .from('user_profiles')
-        // FIX: Changed 'paid_referrals_count' to 'referral_count' to match the database column name
-        .select('id, email, referral_count, referral_code') 
+        .select('id, email, referral_count, referral_code')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
-      } else {
+      } else if (data) {
         setProfile(data as UserProfile);
       }
       setLoading(false);
