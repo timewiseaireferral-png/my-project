@@ -9,6 +9,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Supabase URL and Anon Key are required!');
 }
 
+// Function to generate a short, unique referral code
+function generateShortReferralCode(): string {
+  // Generate a random string of 8 alphanumeric characters
+  return Math.random().toString(36).substring(2, 10).toUpperCase();
+}
+
 // Create and export the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -58,6 +64,29 @@ export const signUp = async (email: string, password: string) => {
       };
     }
     
+    // **FIX: Insert a user profile with a generated referral code**
+    if (data.user) {
+      const referralCode = generateShortReferralCode();
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert([
+          { 
+            id: data.user.id, 
+            email: data.user.email, 
+            referral_code: referralCode,
+            referral_count: 0,
+            referred_by: null,
+          }
+        ]);
+
+      if (profileError) {
+        console.error('Error creating user profile with referral code:', profileError);
+        // Log the error but don't fail the sign-up, as the user is created in auth.
+      } else {
+        console.log(`User profile created with referral code: ${referralCode}`);
+      }
+    }
+
     console.log('Direct sign up successful');
     return { 
       success: true, 
