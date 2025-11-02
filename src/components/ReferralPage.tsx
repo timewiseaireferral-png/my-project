@@ -110,8 +110,8 @@ const ReferralPage: React.FC = () => {
   // Tiers adjusted to 3 Referrals for the final tier
   const tiers = [
     { count: 1, reward: '1 Free Month', description: 'After your first paid referral.' },
-    { count: 2, reward: '$5 Off for 3 Months', description: 'After your second paid referral.' },
-    { count: 3, reward: '$10 Off for 5 Months', description: 'After your third paid referral.' }, // Changed from 5 to 3 referrals
+    { count: 2, reward: '$5 Off for 6 Months', description: 'After your second paid referral.' },
+    { count: 3, reward: '$10 Off for 6 Months', description: 'After your third paid referral.' },
   ];
 
   const currentCount = profile?.paid_referrals_count || 0;
