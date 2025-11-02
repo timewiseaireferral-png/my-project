@@ -11,7 +11,7 @@ import { ComprehensiveFeedbackAnalyzer } from '../lib/comprehensiveFeedbackAnaly
 import { generateDynamicExamples, formatExamplesForDisplay } from '../lib/dynamicExampleGenerator';
 import { ChatSessionService } from '../lib/chatSessionService';
 import { NSW_MARKING_CRITERIA, generateScoringGuidance, mapToNSWScores, getImprovementExamples } from '../lib/nswMarkingCriteria';
-import { NSWCriteriaCompact, NSWCriteriaDisplay } from './NSWCriteriaDisplay.tsx';
+import { NSWCriteriaCompact, NSWCriteriaDisplay } from './NSWCriteriaDisplay';
 import { WRITING_MATE_SIDEBAR_CONTENT } from '../lib/textTypeContent'; // <-- NEW IMPORT
 
 /**
