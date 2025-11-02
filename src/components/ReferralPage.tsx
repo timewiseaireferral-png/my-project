@@ -14,7 +14,7 @@ const GradientText: React.FC<{ children: React.ReactNode, className?: string }> 
 interface UserProfile {
   id: string;
   email: string;
-  paid_referrals_count: number;
+  referral_count: number; // FIX: Changed from paid_referrals_count
   referral_code: string | null;
   // Add other necessary fields
 }
@@ -86,7 +86,8 @@ const ReferralPage: React.FC = () => {
 
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, email, paid_referrals_count, referral_code')
+        // FIX: Changed 'paid_referrals_count' to 'referral_count' to match the database column name
+        .select('id, email, referral_count, referral_code') 
         .eq('id', user.id)
         .single();
 
@@ -102,6 +103,8 @@ const ReferralPage: React.FC = () => {
   }, [user]);
 
   const handleCopy = () => {
+    // FIX: Check if referralLink is not 'Loading...' before copying
+    if (referralLink === 'Loading...') return;
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -114,7 +117,8 @@ const ReferralPage: React.FC = () => {
     { count: 3, reward: '$10 Off for 6 Months', description: 'After your third paid referral.' },
   ];
 
-  const currentCount = profile?.paid_referrals_count || 0;
+  // FIX: Changed 'paid_referrals_count' to 'referral_count'
+  const currentCount = profile?.referral_count || 0;
 
   if (loading) {
     // Use the dark theme loading style
@@ -152,9 +156,17 @@ const ReferralPage: React.FC = () => {
             />
             <button
               onClick={handleCopy}
-              className="flex-shrink-0 px-6 py-3 bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white font-medium rounded-lg hover:from-[#6A33C9] hover:to-[#D9418E] transition duration-300 ease-in-out flex items-center justify-center shadow-lg shadow-purple-500/30"
+              // Disable button while loading
+              disabled={referralLink === 'Loading...'}
+              className={`flex-shrink-0 px-6 py-3 bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white font-medium rounded-lg transition duration-300 ease-in-out flex items-center justify-center shadow-lg shadow-purple-500/30 ${
+                referralLink === 'Loading...' 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:from-[#6A33C9] hover:to-[#D9418E]'
+              }`}
             >
-              {copied ? (
+              {referralLink === 'Loading...' ? (
+                'Loading...'
+              ) : copied ? (
                 <>
                   <CheckCircle className="w-5 h-5 mr-2" /> Copied!
                 </>
