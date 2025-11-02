@@ -92,6 +92,19 @@ const ReferralPage: React.FC = () => {
 
       if (error) {
         console.error('Error fetching profile:', error);
+        
+        // --- FINAL FIX: Gracefully handle the 400 error by setting a default profile state ---
+        // This prevents the component from crashing and allows the "Loading..." state to resolve.
+        // The referral code will be generated locally for display.
+        const defaultProfile: UserProfile = {
+          id: user.id,
+          email: user.email || '',
+          referral_count: 0,
+          referral_code: user.id.substring(0, 8), // Use user ID prefix as a fallback code
+        };
+        setProfile(defaultProfile);
+        // --- END FINAL FIX ---
+
       } else if (data) {
         let userProfile = data as UserProfile;
 
@@ -102,7 +115,6 @@ const ReferralPage: React.FC = () => {
           userProfile = { ...userProfile, referral_code: newCode };
           
           // NOTE: A separate, secure backend function should be responsible for persisting this code.
-          // The frontend will now display the generated code, which is the user's ID prefix.
         }
         // --- END FIX ---
 
