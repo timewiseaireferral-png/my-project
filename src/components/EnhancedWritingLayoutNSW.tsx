@@ -991,17 +991,17 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
           </div>
         </div>
-
+        
         {/* Bottom Submit Area */}
         <div className="flex-shrink-0 p-3 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
-            <NSWSubmitButton
-              content={localContent}
-              wordCount={currentWordCount}
-              isSubmitting={evaluationStatus === "loading"}
-              onSubmit={handleNSWSubmit} // CRITICAL FIX: Use the new handler to dispatch the event
-              darkMode={darkMode}
-              minWords={50}
-            />
+          <NSWSubmitButton
+  content={localContent}
+  wordCount={currentWordCount}
+  isSubmitting={evaluationStatus === "loading"}
+  onSubmit={handleSubmitForEvaluation}
+  darkMode={darkMode}
+  minWords={50}
+/>
         </div>
       </div>
 
