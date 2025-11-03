@@ -142,7 +142,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [showAIReport, setShowAIReport] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [evaluationProgress, setEvaluationProgress] = useState("");
-  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null); // <-- Added this line
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
   const [isLoadingPrompt, setIsLoadingPrompt] = useState(false);
   const [hidePrompt, setHidePrompt] = useState(false);
@@ -515,7 +515,35 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       setShowAIReport(true);
       setEvaluationStatus("success");
 
-      console.log('✅ AI Evaluation complete!');
+      // CRITICAL: Also call ai-feedback endpoint to get grammar/vocabulary analysis for Writing Mate tabs
+      console.log('🔍 Calling ai-feedback for Grammar/Vocabulary analysis...');
+      try {
+        const feedbackResponse = await fetch("/.netlify/functions/ai-feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            essayText: localContent,
+            textType: textType
+          })
+        });
+
+        if (feedbackResponse.ok) {
+          const feedbackData = await feedbackResponse.json();
+          console.log('✅ AI Feedback received:', feedbackData);
+          console.log('Grammar corrections:', feedbackData.grammarCorrections?.length || 0);
+          console.log('Vocabulary enhancements:', feedbackData.vocabularyEnhancements?.length || 0);
+
+          // Set analysis data for Grammar and Vocabulary tabs
+          setAiAnalysis(feedbackData);
+        } else {
+          console.warn('⚠️ ai-feedback call failed, tabs will use fallback logic');
+        }
+      } catch (feedbackError) {
+        console.error('❌ ai-feedback error:', feedbackError);
+        console.warn('⚠️ Grammar/Vocabulary tabs will use fallback logic');
+      }
+
+
     } catch (error) {
       console.error("❌ NSW AI evaluation error:", error);
       setEvaluationStatus("error");
