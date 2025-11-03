@@ -163,9 +163,9 @@ const PricingCard = ({ plan, planType, stripeButtonData }) => {
     : 'relative bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-purple-500/30 rounded-3xl p-8 backdrop-blur-sm';
 
   // The Stripe Buy Button will handle the actual checkout, but we keep the classes for styling the wrapper
-  const ctaClasses = isPopular
-    ? 'w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95'
-    : 'w-full bg-transparent border-2 border-white text-gray-300 font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95 hover:bg-purple-600 hover:text-white hover:border-purple-600';
+  // NOTE: The wrapper classes are mostly for the original button's hover/active state, which the Stripe button handles internally.
+  // We keep the wrapper to maintain the original layout structure.
+  const ctaClasses = 'w-full'; // Simplified to avoid conflicting styles
 
   return (
     <div className={cardClasses}>
@@ -296,7 +296,7 @@ export function PricingPageNew() {
                 Refer a Friend, Get Rewarded
               </h2>
                 <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
-                  As a Pro subscriber, you can refer friends and earn rewards.
+                  As a paying customer, you have the exclusive opportunity to refer friends and earn rewards.
                 </p>
             </div>
 
