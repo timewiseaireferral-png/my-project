@@ -393,8 +393,7 @@ function AppContent() {
               <div className="pt-20"></div>
               <div className="main-route-content">
                 <FeaturesSection />
-              </div>
-            </>
+         </>
           } />
 
           <Route path="/how-it-works" element={
@@ -413,7 +412,6 @@ function AppContent() {
               <div className="pt-20"></div>
               <div className="main-route-content">
                 <PricingPageNew />
-              </div>
               </div>
             </>
           } />
