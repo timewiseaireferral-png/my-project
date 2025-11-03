@@ -392,8 +392,9 @@ function AppContent() {
               <StandardHeader onSignInClick={handleSignInClick} onSignUpClick={handleSignUpClick} />
               <div className="pt-20"></div>
               <div className="main-route-content">
-                <FeaturesSection />
-         </>
+                  <FeaturesSection />
+                </div>
+              </>
           } />
 
           <Route path="/how-it-works" element={
@@ -585,11 +586,10 @@ function AppContent() {
             )
           } />
           <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-
-        {shouldShowFooter() && <Footer onNavigate={handleNavigation} />}
+          </Routes>
+          {shouldShowFooter() && <Footer onNavigate={handleNavigation} />}
+        </div>
       </div>
-    </div>
   );
 }
 
