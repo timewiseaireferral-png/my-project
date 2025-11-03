@@ -552,6 +552,14 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     }
   }, [localContent, onSubmit, textType, effectivePrompt]);
 
+  // CRITICAL FIX: The NSWSubmitButton was not dispatching the event to trigger the evaluation logic
+  // in WritingWorkspace.tsx. This new handler dispatches the event.
+  const handleNSWSubmit = useCallback(() => {
+    console.log('Dispatching submitForEvaluation event from EnhancedWritingLayoutNSW');
+    // Dispatch the global event to trigger the logic in WritingWorkspace.tsx
+    window.dispatchEvent(new CustomEvent('submitForEvaluation', { detail: { content: localContent, textType } }));
+  }, [localContent, textType]);
+
   const handleApplyFix = useCallback((fix: LintFix) => {
     if (textareaRef.current) {
       const start = fix.evidence.start;
@@ -986,14 +994,14 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
         {/* Bottom Submit Area */}
         <div className="flex-shrink-0 p-3 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
-          <NSWSubmitButton
-            content={localContent}
-            wordCount={currentWordCount}
-            isSubmitting={evaluationStatus === 'loading'}
-            onSubmit={handleSubmitForEvaluation}
-            darkMode={darkMode}
-            minWords={50}
-          />
+            <NSWSubmitButton
+              content={localContent}
+              wordCount={currentWordCount}
+              isSubmitting={evaluationStatus === "loading"}
+              onSubmit={handleNSWSubmit} // CRITICAL FIX: Use the new handler to dispatch the event
+              darkMode={darkMode}
+              minWords={50}
+            />
         </div>
       </div>
 
