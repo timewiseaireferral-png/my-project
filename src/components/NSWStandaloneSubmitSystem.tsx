@@ -3,23 +3,20 @@ import React, { useState } from 'react';
 interface NSWStandaloneSubmitSystemProps {
   content: string;
   textType: string;
-  onComplete: (report: any) => void;
+  wordCount: number; // Added wordCount prop based on usage in WritingWorkspace.tsx
+  onEvaluationComplete: (report: any) => void; // Corrected prop name
   onClose: () => void;
 }
 
 export function NSWStandaloneSubmitSystem({
   content,
   textType,
-  onComplete,
+  wordCount, // Added wordCount prop
+  onEvaluationComplete, // Corrected prop name
   onClose,
 }: NSWStandaloneSubmitSystemProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Expose submit function to parent via ref or callback
-  React.useImperativeHandle(React.useRef(), () => ({
-    submitEvaluation
-  }));
 
   const submitEvaluation = async () => {
     setIsSubmitting(true);
@@ -53,15 +50,19 @@ export function NSWStandaloneSubmitSystem({
 
       const report = await response.json();
       console.log("NSWStandaloneSubmitSystem: AI evaluation received:", report);
-      onComplete(report);
+      onEvaluationComplete(report); // Corrected prop name
     } catch (err: any) {
       console.error("NSWStandaloneSubmitSystem: Submission error:", err);
       setError(err.message || "Failed to generate analysis report. Please try again.");
-      onComplete(null); // Indicate failure
+      onEvaluationComplete(null); // Corrected prop name
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  React.useEffect(() => {
+    submitEvaluation();
+  }, []); // Run once on mount
 
   return null; // This component no longer renders UI directly
 }
