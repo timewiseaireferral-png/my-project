@@ -87,10 +87,7 @@ export default function WritingWorkspaceFixed() {
   // NSW Evaluation Submit Handler (Critical Bug Fix)
   async function onNSWSubmit() {
     console.log('🎯 NSW Submit triggered');
-    setStatus("loading");
     setErr(undefined);
-    // CRITICAL FIX: Removed the automatic setShowNSWEvaluation(true) here as it's likely causing the redirect.
-    // The actual evaluation logic should be here, and the modal should be controlled.
     
     try {
       const text = editorRef.current?.getText() || currentText || "";
@@ -104,18 +101,8 @@ export default function WritingWorkspaceFixed() {
         wordCount: text.trim().split(/\s+/).filter(w => w.length > 0).length 
       });
 
-      // CRITICAL FIX: The original code was missing the actual API call and state update.
-      // We will simulate the API call and then show the evaluation.
-      // In a real scenario, the evaluateEssay API call would go here.
-      // For now, we just ensure the UI is updated correctly.
-      
-      // Simulate API call success
-      // const report = await evaluateEssay(text, textType);
-      // onNSWEvaluationComplete(report);
-
-      // For now, just show the evaluation system (which should contain the API call)
+      // Show the evaluation system, which will handle the API call and loading state
       setShowNSWEvaluation(true);
-      setStatus("success"); // Assuming the evaluation system handles its own loading state
       
     } catch (e: any) {
       console.error('NSW Submit error:', e);
