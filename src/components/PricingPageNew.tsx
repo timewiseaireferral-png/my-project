@@ -54,6 +54,7 @@ const CORE_FEATURES = [
 ];
 
 const PRO_FEATURES = [
+  { name: 'Access to Learning Mode', free: false, monthly: true, annual: true }, // New feature added
   { name: 'Option to write on your prompt (based on Essay type)', free: false, monthly: true, annual: true },
   { name: 'Unlimited AI Coaching & Feedback', free: false, monthly: true, annual: true },
   { name: 'Full Access to All 15+ Templates', free: false, monthly: true, annual: true },
@@ -104,13 +105,15 @@ const PLANS = [
 
 const FeatureItem = ({ feature, planType }) => {
   const isIncluded = feature[planType];
+
+  // If the feature is not included in the plan, we don't render it at all, as requested.
+  if (!isIncluded) {
+    return null;
+  }
+
   return (
     <li className="flex items-start gap-3">
-      {isIncluded ? (
-        <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-      ) : (
-        <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-      )}
+      <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
       <span className="text-gray-300">{feature.name}</span>
     </li>
   );
@@ -163,8 +166,6 @@ const PricingCard = ({ plan, planType, stripeButtonData }) => {
     : 'relative bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-purple-500/30 rounded-3xl p-8 backdrop-blur-sm';
 
   // The Stripe Buy Button will handle the actual checkout, but we keep the classes for styling the wrapper
-  // NOTE: The wrapper classes are mostly for the original button's hover/active state, which the Stripe button handles internally.
-  // We keep the wrapper to maintain the original layout structure.
   const ctaClasses = 'w-full'; // Simplified to avoid conflicting styles
 
   return (
