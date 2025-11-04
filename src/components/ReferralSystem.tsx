@@ -160,7 +160,7 @@ export const ReferralSystem: React.FC = () => {
         successful referrals.
       </p>
 
-      {isLoading || referralCode === null ? (
+      {isLoading || referralCount === null ? (
         <div className="flex justify-center items-center h-20">
           <Loader2 className="w-6 h-6 animate-spin" style={{ color: COLORS.LIGHT_GRAY }} />
         </div>

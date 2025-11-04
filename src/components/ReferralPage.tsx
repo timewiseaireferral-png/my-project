@@ -77,7 +77,7 @@ const ReferralPage: React.FC = () => {
   const referralBaseUrl = 'https://writingmate.co/signup'; 
   const referralLink = profile?.referral_code ? `${referralBaseUrl}?ref=${profile.referral_code}` : 'Loading...';
 
-  useEffect(( ) => {
+  useEffect(() => {
     const fetchProfile = async () => {
       if (!user) {
         setLoading(false);
@@ -92,33 +92,8 @@ const ReferralPage: React.FC = () => {
 
       if (error) {
         console.error('Error fetching profile:', error);
-        
-        // --- FINAL FIX: Gracefully handle the 400 error by setting a default profile state ---
-        // This prevents the component from crashing and allows the "Loading..." state to resolve.
-        // The referral code will be generated locally for display.
-        const defaultProfile: UserProfile = {
-          id: user.id,
-          email: user.email || '',
-          referral_count: 0,
-          referral_code: user.id.substring(0, 8), // Use user ID prefix as a fallback code
-        };
-        setProfile(defaultProfile);
-        // --- END FINAL FIX ---
-
       } else if (data) {
-        let userProfile = data as UserProfile;
-
-        // --- FIX: Generate referral code in state if it doesn't exist, but do NOT update DB from frontend ---
-        if (!userProfile.referral_code) {
-          // Generate a temporary code for display purposes
-          const newCode = user.id.substring(0, 8); 
-          userProfile = { ...userProfile, referral_code: newCode };
-          
-          // NOTE: A separate, secure backend function should be responsible for persisting this code.
-        }
-        // --- END FIX ---
-
-        setProfile(userProfile);
+        setProfile(data as UserProfile);
       }
       setLoading(false);
     };
