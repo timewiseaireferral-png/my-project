@@ -290,7 +290,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     const timeoutId = setTimeout(async () => {
       console.log('🔄 Auto-fetching AI analysis for Writing Mate tabs...');
       try {
-        const feedbackResponse = await fetch("/.netlify/functions/ai-feedback", {
+        const feedbackResponse = await fetch("/api/ai-feedback", { 
+          
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -492,7 +493,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       console.log('Calling AI NSW evaluation API...');
 
       // Call AI evaluation backend
-      const response = await fetch("/.netlify/functions/nsw-ai-evaluation", {
+      const response = await fetch("/api/nsw-ai-evaluation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
