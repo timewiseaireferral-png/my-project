@@ -6,7 +6,7 @@ import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { CustomPromptModal } from './CustomPromptModal';
 import { generatePrompt } from '../lib/openai';
-import { Mail, CheckCircle, Clock, FileText, PenTool, BarChart3, Settings, X, Star, BookOpen, Zap, Heart, Trophy, Sparkles, Smile, Target, Gift, Flame, TrendingUp, Award, Rocket, Crown, Gem, Wand2, Palette, Music, Camera, Gamepad2, HelpCircle, ArrowRight, Play, Calendar, Users, ChevronRight, Activity, BookMarked, CreditCard as Edit3, Timer, Brain, Lightbulb, Home } from 'lucide-react';
+import { Mail, CheckCircle, Clock, FileText, PenTool, BarChart3, Settings, X, Star, BookOpen, Zap, Heart, Trophy, Sparkles, Smile, Target, Gift, Flame, TrendingUp, Award, Rocket, Crown, Gem, Wand2, Palette, Music, Camera, Gamepad2, HelpCircle, ArrowRight, Play, Calendar, Users, ChevronRight, Activity, BookMarked, CreditCard, Timer, Brain, Lightbulb, Home } from 'lucide-react';
 
 interface DashboardProps {
   user?: any;
@@ -267,238 +267,191 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         console.log('✅ Dashboard: Navigation to /writing initiated');
 
       } else {
-        throw new Error('No prompt generated');
+        console.error('❌ Dashboard: Prompt generation failed (empty prompt)');
       }
-
     } catch (error) {
-      console.error('❌ Error generating prompt:', error);
-
-      // FALLBACK: Use high-quality static prompts if AI generation fails
-      const fallbackPrompts = {
-        narrative: "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.",
-        persuasive: "Choose a topic you feel strongly about and write a persuasive essay to convince others of your viewpoint. Use strong evidence, logical reasoning, and persuasive techniques like rhetorical questions and emotional appeals. Structure your argument clearly with an introduction that states your position, body paragraphs that support your argument with evidence, and a conclusion that reinforces your main point.",
-        expository: "Select a topic you know well and write an informative essay that teaches others about it. Use clear explanations, relevant examples, and organize your information in a logical sequence. Include an engaging introduction that hooks your reader, body paragraphs that explore different aspects of your topic, and a strong conclusion that summarizes your main points.",
-        reflective: "Think about a meaningful experience in your life and write a reflective piece exploring what you learned from it. Show your thoughts and feelings, and explain how this experience changed or influenced you. Be honest and thoughtful in your reflection, using specific details to help your reader understand the significance of this experience.",
-        descriptive: "Choose a place, person, or object that is special to you and write a descriptive piece that brings it to life for your reader. Use sensory details (sight, sound, smell, touch, taste) and figurative language like metaphors and similes to create vivid imagery. Paint a picture with words that allows your reader to experience what you're describing.",
-        recount: "Write about an important event or experience in your life, telling what happened in the order it occurred. Include details about who was involved, where it happened, when it took place, and why it was significant to you. Use descriptive language to help your reader visualize the events and understand their importance."
-      };
-
-      const fallbackPrompt = fallbackPrompts[selectedWritingType as keyof typeof fallbackPrompts] || fallbackPrompts.narrative;
-
-      console.log('🔄 Using fallback prompt:', fallbackPrompt);
-
-      // Save fallback prompt
-      localStorage.setItem(`${selectedWritingType}_prompt`, fallbackPrompt);
-      localStorage.setItem('generatedPrompt', fallbackPrompt);
-      localStorage.setItem('selectedWritingType', selectedWritingType);
-      localStorage.setItem('promptType', 'generated');
-
-      // Save to database for persistence
-      await saveWritingSessionToDatabase(fallbackPrompt, selectedWritingType);
-
-      // Close prompt options modal
-      setShowPromptOptionsModal(false);
-
-      // Navigate to writing area with fallback prompt
-      await new Promise(resolve => setTimeout(resolve, 200));
-      navigate('/writing');
-
+      console.error('❌ Dashboard: Error during prompt generation:', error);
     } finally {
       setIsGeneratingPrompt(false);
     }
   };
 
-  // FIXED: Step 3 - Handle custom prompt with timestamp, then navigate to writing area
-  const handleCustomPrompt = () => {
-    console.log('✏️ Dashboard: Using custom prompt for:', selectedWritingType);
-
-    // Store the prompt type
-    localStorage.setItem('promptType', 'custom');
-    localStorage.setItem('selectedWritingType', selectedWritingType);
-
-    // Close prompt options modal and show custom prompt modal
-    setShowPromptOptionsModal(false);
-    setShowCustomPromptModal(true);
-  };
-
-  // Handle custom prompt submission and navigate to writing area
+  // FIXED: Step 4 - Handle custom prompt submission, save with timestamp, then navigate
   const handleCustomPromptSubmit = async (prompt: string) => {
-    console.log('✏️ Dashboard: Custom prompt submitted:', prompt.substring(0, 50) + '...');
+    console.log('✍️ Dashboard: Custom prompt submitted for:', selectedWritingType);
 
-    // FIXED: Clear generated prompt and save custom prompt with timestamp
+    // CRITICAL: Clear generated prompt and save custom prompt with timestamp
     localStorage.removeItem("generatedPrompt");
     localStorage.removeItem("generatedPromptTimestamp");
     localStorage.setItem("customPrompt", prompt);
     localStorage.setItem("customPromptTimestamp", new Date().toISOString());
+    localStorage.setItem('selectedWritingType', selectedWritingType);
+    localStorage.setItem("promptType", "custom");
+
+    console.log('✅ Custom prompt saved to localStorage with timestamp');
 
     // Save to database for persistence
     await saveWritingSessionToDatabase(prompt, selectedWritingType);
 
-    console.log('✅ Custom prompt saved to localStorage with timestamp');
-
     // Dispatch custom event to notify other components
     window.dispatchEvent(new CustomEvent('promptGenerated', {
-      detail: { prompt, textType: 'custom', timestamp: new Date().toISOString() }
+      detail: { prompt, textType: selectedWritingType, timestamp: new Date().toISOString() }
     }));
 
-    // Close custom prompt modal
+    // Small delay to ensure localStorage is written
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Navigate to writing area AFTER prompt is submitted
+    navigate("/writing");
     setShowCustomPromptModal(false);
+    console.log('✅ Dashboard: Navigation to /writing initiated');
+  };
 
-    // Navigate to writing page (Step 4 - Writing Area)
-    console.log('📍 Dashboard: Navigating to writing area with custom prompt...');
-
-    // FIXED: Use React Router navigate directly for consistent navigation
-    try {
-      navigate('/writing');
-    } catch (error) {
-      console.error('❌ Dashboard: Navigation error:', error);
-      // Fallback to onNavigate if available
-      if (onNavigate) {
-        console.log('📍 Dashboard: Using onNavigate fallback');
-        onNavigate('writing');
-      } else {
-        console.log('📍 Dashboard: Using window.location fallback');
-        window.location.href = '/writing';
-      }
-    }
+  // FIXED: Step 3b - Handle custom prompt selection, open custom prompt modal
+  const handleCustomPrompt = () => {
+    console.log('📝 Dashboard: Custom prompt option selected');
+    setShowPromptOptionsModal(false);
+    setShowCustomPromptModal(true);
   };
 
   const handlePracticeExam = () => {
-    console.log('🚀 Dashboard: Navigating to practice exam...');
-    try {
-      navigate('/exam');
-    } catch (error) {
-      console.error('❌ Dashboard: Exam navigation error:', error);
-      if (onNavigate) {
-        onNavigate('exam');
-      } else {
-        window.location.href = '/exam';
-      }
+    navigate('/exam');
+  };
+
+  const renderAccessStatus = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+          <Clock className="w-5 h-5 animate-spin" />
+          <span className="font-medium">Checking Access Status...</span>
+        </div>
+      );
     }
-  };
 
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  const getTimeRemaining = (dateString: string) => {
-    const now = new Date();
-    const target = new Date(dateString);
-    const diff = target.getTime() - now.getTime();
-
-    if (diff <= 0) return 'Expired';
-
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}m remaining`;
-    } else {
-      return `${minutes}m remaining`;
+    if (accessType === 'permanent') {
+      return (
+        <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+          <CheckCircle className="w-5 h-5" />
+          <span className="font-medium">Full Access</span>
+        </div>
+      );
     }
-  };
 
-  if (isLoading) {
+    if (accessType === 'temporary' && tempAccessUntil) {
+      const untilDate = new Date(tempAccessUntil).toLocaleDateString();
+      return (
+        <div className="flex items-center space-x-2 text-orange-600 dark:text-orange-400">
+          <Clock className="w-5 h-5" />
+          <span className="font-medium">Trial Access until {untilDate}</span>
+        </div>
+      );
+    }
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-indigo-400 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-slate-700 dark:text-slate-200 text-lg font-medium">Loading your dashboard...</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Preparing your writing journey</p>
+      <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+        <X className="w-5 h-5" />
+        <span className="font-medium">No Active Access</span>
+        <button
+          onClick={() => navigate('/pricing')}
+          className="ml-4 px-3 py-1 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-full transition-colors"
+        >
+          Get Access
+        </button>
+      </div>
+    );
+  };
+
+  const renderWelcomeMessage = () => {
+    if (!showWelcomeMessage) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-xl w-full p-8 relative">
+          <button
+            onClick={handleDismissWelcome}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="text-center">
+            <Sparkles className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100 mb-3">Welcome, {getUserName()}!</h2>
+            <p className="text-gray-600 dark:text-slate-300 mb-6">
+              You now have **{accessType === 'permanent' ? 'Full Access' : 'Temporary Access'}** to our powerful writing tools.
+              We're excited to help you become a better writer!
+            </p>
+            <div className="space-y-4 text-left">
+              <div className="flex items-start space-x-3">
+                <Trophy className="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" />
+                <p className="text-gray-700 dark:text-slate-200">
+                  **Start with a Writing Session:** Click the "Start Writing" button to begin a new essay with AI guidance.
+                </p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <BarChart3 className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" />
+                <p className="text-gray-700 dark:text-slate-200">
+                  **Track Your Progress:** View your past essays and progress metrics on the dashboard.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleDismissWelcome}
+              className="mt-8 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors"
+            >
+              Let's Get Started!
+            </button>
           </div>
         </div>
       </div>
     );
-  }
+  };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 relative">
+  const renderStartHereGuide = () => {
+    if (!showStartHereGuide || accessType === 'none') return null;
 
-      {/* Welcome Message Modal - Modern Design */}
-      {showWelcomeMessage && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full relative border border-slate-200 dark:border-slate-700">
-            <button
-              onClick={handleDismissWelcome}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-100 transition-colors bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 p-2 rounded-full"
-            >
-              <X className="h-5 w-5" />
-            </button>
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-xl w-full p-8 relative">
+          <div className="text-center">
+            <Lightbulb className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100 mb-3">Your First Steps</h2>
+            <p className="text-gray-600 dark:text-slate-300 mb-6">
+              Follow this quick guide to start your first AI-guided writing session.
+            </p>
             
-            <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Sparkles className="h-8 w-8 text-white" />
-              </div>
-              
-              <h2 className="heading-3 text-slate-900 dark:text-slate-100 mb-4">
-                Welcome, {getUserName()}! 🎉
-              </h2>
-              
-              <p className="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
-                You're all set to start your writing journey! Your AI writing buddy is ready to help you create amazing stories and essays.
-              </p>
-              
-              <button
-                onClick={handleDismissWelcome}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105"
-              >
-                Let's Get Started!
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Start Here Guide Modal */}
-      {showStartHereGuide && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full relative border border-slate-200 dark:border-slate-700">
-            <button
-              onClick={handleDismissGuide}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-100 transition-colors bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 p-2 rounded-full"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            
-            <div className="p-8">
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Lightbulb className="h-10 w-10 text-white" />
-                </div>
-                <h2 className="heading-2 text-slate-900 dark:text-slate-100 mb-2">Quick Start Guide</h2>
-                <p className="text-slate-600 dark:text-slate-300">Follow these simple steps to begin writing</p>
-              </div>
-              
-              <div className="space-y-4 mb-8">
-                <div className="flex items-start space-x-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+            <div className="space-y-6 mb-8">
+              <div className="bg-gray-50 dark:bg-slate-700 p-4 rounded-xl shadow-inner">
+                <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Start Writing</h3>
-                    <p className="text-slate-600 dark:text-slate-300 text-sm">Click the "Start Writing" button to begin your writing session</p>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Click "Start Writing"</h3>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm">The big blue card on your dashboard</p>
                   </div>
                 </div>
-                
-                <div className="flex items-start space-x-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                  <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-slate-700 p-4 rounded-xl shadow-inner">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Choose Writing Type</h3>
-                    <p className="text-slate-600 dark:text-slate-300 text-sm">Select from narrative, persuasive, descriptive, and more</p>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Choose a Text Type</h3>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm">Narrative, Persuasive, or other</p>
                   </div>
                 </div>
-                
-                <div className="flex items-start space-x-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
-                  <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-slate-700 p-4 rounded-xl shadow-inner">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Get Your Prompt</h3>
-                    <p className="text-slate-600 dark:text-slate-300 text-sm">Receive an AI-generated prompt or create your own</p>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Get a Prompt</h3>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm">Use a generated one or write your own</p>
                   </div>
                 </div>
-                
-                <div className="flex items-start space-x-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
+              </div>
+
+              <div className="bg-gray-50 dark:bg-slate-700 p-4 rounded-xl shadow-inner">
+                <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
                   <div>
                     <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Write & Get Feedback</h3>
@@ -527,7 +480,17 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
             </div>
           </div>
         </div>
-      )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 dark:bg-slate-900 relative">
+      {renderWelcomeMessage()}
+      {renderStartHereGuide()}
+      
+      {/* Background Gradient */}
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-br from-blue-50 dark:from-slate-800 to-indigo-100 dark:to-slate-900/50"></div>
 
       {/* Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -556,7 +519,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         <div className="mb-12">
           <div>
             <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-slate-100 mb-3">
-              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-700">{getUserName()}</span>! 👋
+              Welcome back! 👋
             </h1>
             <p className="text-xl text-gray-600 dark:text-slate-300">
               Ready to create something amazing today?
@@ -582,7 +545,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-6">
                   <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                    <Edit3 className="h-10 w-10 text-blue-600" />
+                    <PenTool className="h-10 w-10 text-blue-600" />
                   </div>
                   <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2.5 text-white font-bold text-sm flex items-center space-x-2 group-hover:bg-white group-hover:text-blue-600 transition-all shadow-lg">
                     <span>Click Me!</span>
@@ -703,7 +666,17 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Lightbulb className="h-4 w-4 text-blue-600" />
+                  <Smile className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 dark:text-slate-100">Use Strong Verbs</p>
+                  <p className="text-xs text-gray-600 dark:text-slate-300">Make your writing exciting</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="h-4 w-4 text-yellow-600" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 dark:text-slate-100">Show, Don't Tell</p>
@@ -738,33 +711,53 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 dark:border-slate-700 shadow-sm">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-6">Quick Actions</h3>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {/* View Essays */}
+            <button onClick={() => navigate('/essays')} className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 rounded-xl flex items-center justify-center mb-3 transition-all">
-                <BookMarked className="h-6 w-6 text-blue-600" />
+                <FileText className="h-6 w-6 text-blue-600" />
               </div>
               <span className="text-sm font-medium text-gray-700 dark:text-slate-200">View Essays</span>
             </button>
 
-            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
+            {/* Progress */}
+            <button onClick={() => navigate('/progress')} className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 group-hover:from-green-200 group-hover:to-green-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <BarChart3 className="h-6 w-6 text-green-600" />
               </div>
               <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Progress</span>
             </button>
+            
+            {/* Billing */}
+            <button onClick={() => navigate('/settings')} className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-100 to-teal-200 group-hover:from-teal-200 group-hover:to-teal-300 rounded-xl flex items-center justify-center mb-3 transition-all">
+                <CreditCard className="h-6 w-6 text-teal-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Billing</span>
+            </button>
 
-            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
+            {/* Referral */}
+            <button onClick={() => navigate('/referral')} className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
+              <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-yellow-200 group-hover:from-yellow-200 group-hover:to-yellow-300 rounded-xl flex items-center justify-center mb-3 transition-all">
+                <Gift className="h-6 w-6 text-yellow-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Referral</span>
+            </button>
+
+            {/* Settings - FIX: Added dark:text-slate-200 */}
+            <button onClick={() => navigate('/settings')} className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <Settings className="h-6 w-6 text-purple-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">Settings</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Settings</span>
             </button>
 
-            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
+            {/* Help - FIX: Added dark:text-slate-200 */}
+            <button onClick={() => navigate('/help')} className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 group-hover:from-orange-200 group-hover:to-orange-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <HelpCircle className="h-6 w-6 text-orange-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">Help</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Help</span>
             </button>
           </div>
         </div>

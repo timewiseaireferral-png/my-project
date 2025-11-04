@@ -59,7 +59,7 @@ export function Footer({ onNavigate }: FooterProps) {
                 <Github className="h-6 w-6" />
               </a>
               <a
-                href="https://www.linkedin.com/company/109644196/"
+                href="https://linkedin.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-300"
@@ -78,7 +78,7 @@ export function Footer({ onNavigate }: FooterProps) {
             <ul className="space-y-4">
               <li>
                 <button
-                  onClick={(  ) => handleNavigation('features')}
+                  onClick={( ) => handleNavigation('features')}
                   className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base transition-colors duration-300 font-medium"
                 >
                   Features
@@ -102,12 +102,12 @@ export function Footer({ onNavigate }: FooterProps) {
             </h3>
             <ul className="space-y-4">
               <li>
-                <a
-                  href="/faq"
+                <button
+                  onClick={() => handleNavigation("faq")}
                   className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base transition-colors duration-300 font-medium"
                 >
                   FAQ
-                </a>
+                </button>
               </li>
               <li>
                 <a
@@ -115,12 +115,12 @@ export function Footer({ onNavigate }: FooterProps) {
                   className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base transition-colors duration-300 font-medium flex items-center group"
                 >
                   <Mail className="h-5 w-5 mr-2 group-hover:text-indigo-600 transition-colors duration-300" />
-                  support@writingmate.co
+                  Contact Support
                 </a>
               </li>
               <li>
                 <a
-                  href="/help-center"
+                  href="#faq"
                   className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base transition-colors duration-300 font-medium"
                 >
                   Help Center
@@ -152,25 +152,25 @@ export function Footer({ onNavigate }: FooterProps) {
           <div className="flex flex-col lg:flex-row justify-between items-center space-y-6 lg:space-y-0">
             <div className="flex flex-wrap justify-center lg:justify-start gap-8">
               <a
-                href="/privacy"
+                href="#faq"
                 className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors duration-300 font-medium"
               >
                 Privacy Policy
               </a>
               <a
-                href="/terms"
+                href="#faq"
                 className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors duration-300 font-medium"
               >
                 Terms of Service
               </a>
               <a
-                href="/cookie-policy"
+                href="#faq"
                 className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors duration-300 font-medium"
               >
                 Cookie Policy
               </a>
               <a
-                href="/accessibility"
+                href="#faq"
                 className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors duration-300 font-medium"
               >
                 Accessibility

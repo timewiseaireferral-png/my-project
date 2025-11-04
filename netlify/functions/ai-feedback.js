@@ -48,8 +48,22 @@ Return ONLY valid JSON with this exact structure:
       "improvements": [{"issue": "issue description", "evidence": {"text": "evidence text", "start": 0, "end": 20}, "suggestion": "improvement suggestion"}]
     }
   },
-  "grammarCorrections": [],
-  "vocabularyEnhancements": [],
+  "grammarCorrections": [
+    {
+      "original": "text with error",
+      "suggestion": "corrected text",
+      "explanation": "why this is wrong and how to fix it",
+      "position": {"start": 0, "end": 10}
+    }
+  ],
+  "vocabularyEnhancements": [
+    {
+      "original": "simple word",
+      "suggestion": "sophisticated word",
+      "explanation": "why this word is better in this context",
+      "position": {"start": 20, "end": 30}
+    }
+  ],
   "narrativeStructure": {
     "orientationPresent": boolean,
     "complicationPresent": boolean,
@@ -113,6 +127,21 @@ SPELLING, PUNCTUATION & GRAMMAR (20%):
 Word count: ${essayText.split(/\s+/).length} words
 
 BE STRICT: If this looks like copied instructions or very short content, give scores of 1-2. Only exceptional work gets 4-5.
+
+IMPORTANT - GRAMMAR & VOCABULARY ANALYSIS:
+Provide 3-5 specific grammar/spelling corrections with:
+- The exact original text with the error
+- The corrected suggestion
+- A clear explanation appropriate for 10-12 year olds
+- Exact character positions (start and end, 0-indexed)
+
+Provide 3-5 vocabulary enhancement opportunities with:
+- The exact simple/weak word used
+- A more sophisticated alternative appropriate for this age group
+- An explanation of why the new word is better in this specific context
+- Exact character positions (start and end, 0-indexed)
+
+CRITICAL: For positions, find the actual text in the essay and provide the exact character index where it starts and ends.
 
 Return only the JSON response with realistic strict scores.`;
 }
@@ -218,6 +247,57 @@ function createStrictFallback(essayText, textType) {
     modelVersion: "strict-fallback",
     id: `feedback-${Date.now()}-${Math.random().toString(36).slice(2)}`
   };
+}
+
+// Helper function to validate and fix positions in grammar corrections and vocabulary enhancements
+function validateAndFixPositions(feedbackData, originalText) {
+  const textLength = originalText.length;
+
+  // Fix grammar corrections
+  if (feedbackData.grammarCorrections && Array.isArray(feedbackData.grammarCorrections)) {
+    feedbackData.grammarCorrections = feedbackData.grammarCorrections.map(correction => {
+      if (correction.original) {
+        const startPos = originalText.indexOf(correction.original);
+        if (startPos !== -1) {
+          correction.position = {
+            start: startPos,
+            end: startPos + correction.original.length
+          };
+        } else {
+          // If not found, set to beginning with limited length
+          correction.position = {
+            start: 0,
+            end: Math.min(correction.original.length, textLength)
+          };
+        }
+      }
+      return correction;
+    });
+  }
+
+  // Fix vocabulary enhancements
+  if (feedbackData.vocabularyEnhancements && Array.isArray(feedbackData.vocabularyEnhancements)) {
+    feedbackData.vocabularyEnhancements = feedbackData.vocabularyEnhancements.map(enhancement => {
+      if (enhancement.original) {
+        const startPos = originalText.indexOf(enhancement.original);
+        if (startPos !== -1) {
+          enhancement.position = {
+            start: startPos,
+            end: startPos + enhancement.original.length
+          };
+        } else {
+          // If not found, set to beginning with limited length
+          enhancement.position = {
+            start: 0,
+            end: Math.min(enhancement.original.length, textLength)
+          };
+        }
+      }
+      return enhancement;
+    });
+  }
+
+  return feedbackData;
 }
 
 exports.handler = async (event) => {
@@ -352,7 +432,7 @@ exports.handler = async (event) => {
     }
 
     // Ensure required fields with safe defaults
-    const response = {
+    let response = {
       overallScore: parsed.overallScore || 20, // Low default
       criteria: {
         ideasContent: {
@@ -389,6 +469,11 @@ exports.handler = async (event) => {
       modelVersion: completion.model || "gpt-4o-mini",
       id: parsed.id || `feedback-${Date.now()}-${Math.random().toString(36).slice(2)}`
     };
+
+    // Validate and fix positions for grammar corrections and vocabulary enhancements
+    response = validateAndFixPositions(response, body.essayText);
+    console.log("Grammar corrections count:", response.grammarCorrections.length);
+    console.log("Vocabulary enhancements count:", response.vocabularyEnhancements.length);
 
     console.log("STRICT response prepared successfully");
     console.log("Final scores:", {

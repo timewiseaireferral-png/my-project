@@ -142,6 +142,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [showAIReport, setShowAIReport] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [evaluationProgress, setEvaluationProgress] = useState("");
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
   const [isLoadingPrompt, setIsLoadingPrompt] = useState(false);
   const [hidePrompt, setHidePrompt] = useState(false);
@@ -276,6 +277,43 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       setShowPromptOptionsModal(true);
     }
   }, [effectivePrompt, popupFlowCompleted]);
+
+  // Auto-fetch AI analysis for Grammar/Vocabulary tabs (debounced)
+  useEffect(() => {
+    // Only fetch if content is substantial (50+ words)
+    const wordCount = localContent.trim().split(/\s+/).filter(w => w.length > 0).length;
+    if (wordCount < 50) {
+      return;
+    }
+
+    // Debounce: wait 3 seconds after user stops typing
+    const timeoutId = setTimeout(async () => {
+      console.log('🔄 Auto-fetching AI analysis for Writing Mate tabs...');
+      try {
+        const feedbackResponse = await fetch("/.netlify/functions/ai-feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            essayText: localContent,
+            textType: textType
+          })
+        });
+
+        if (feedbackResponse.ok) {
+          const feedbackData = await feedbackResponse.json();
+          console.log('✅ Auto-fetched AI feedback:', {
+            grammar: feedbackData.grammarCorrections?.length || 0,
+            vocab: feedbackData.vocabularyEnhancements?.length || 0
+          });
+          setAiAnalysis(feedbackData);
+        }
+      } catch (error) {
+        console.error('❌ Auto-fetch error:', error);
+      }
+    }, 3000);
+
+    return () => clearTimeout(timeoutId);
+  }, [localContent, textType]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -477,6 +515,34 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       setShowAIReport(true);
       setEvaluationStatus("success");
 
+      // CRITICAL: Also call ai-feedback endpoint to get grammar/vocabulary analysis for Writing Mate tabs
+      console.log('🔍 Calling ai-feedback for Grammar/Vocabulary analysis...');
+      try {
+        const feedbackResponse = await fetch("/.netlify/functions/ai-feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            essayText: localContent,
+            textType: textType
+          })
+        });
+
+        if (feedbackResponse.ok) {
+          const feedbackData = await feedbackResponse.json();
+          console.log('✅ AI Feedback received:', feedbackData);
+          console.log('Grammar corrections:', feedbackData.grammarCorrections?.length || 0);
+          console.log('Vocabulary enhancements:', feedbackData.vocabularyEnhancements?.length || 0);
+
+          // Set analysis data for Grammar and Vocabulary tabs
+          setAiAnalysis(feedbackData);
+        } else {
+          console.warn('⚠️ ai-feedback call failed, tabs will use fallback logic');
+        }
+      } catch (feedbackError) {
+        console.error('❌ ai-feedback error:', feedbackError);
+        console.warn('⚠️ Grammar/Vocabulary tabs will use fallback logic');
+      }
+
       console.log('✅ AI Evaluation complete!');
     } catch (error) {
       console.error("❌ NSW AI evaluation error:", error);
@@ -591,7 +657,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             <div className="px-3 pb-2">
               <div className={`p-2 rounded-lg border text-sm ${
                 examModeLocal
-                  ? 'bg-white border-gray-300 text-gray-800'
+                  ? darkMode
+                    ? 'bg-slate-800 border-slate-600 text-gray-200'
+                    : 'bg-white border-gray-300 text-gray-800'
                   : darkMode
                   ? 'bg-slate-900/50 border-slate-700 text-gray-100'
                   : 'bg-white border-blue-200 text-blue-900'
@@ -843,37 +911,47 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   <option value="Courier New">Courier New</option>
                 </select>
               </div>
-              
-              {/* Font Size */}
-              <div className="space-y-2">
-                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  📏 Font Size
-                </label>
-                <input
-                  type="number"
-                  value={fontSize}
-                  onChange={(e) => onSettingsChange && onSettingsChange({ fontSize: parseInt(e.target.value) })}
-                  className={`w-full p-2 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    darkMode ? 'bg-slate-800 text-gray-100 border-slate-600' : 'bg-white text-gray-900 border-gray-300'
-                  }`}
-                />
-              </div>
-              
-              {/* Line Height */}
-              <div className="space-y-2">
-                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  📐 Line Height
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={lineHeight}
-                  onChange={(e) => onSettingsChange && onSettingsChange({ lineHeight: parseFloat(e.target.value) })}
-                  className={`w-full p-2 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    darkMode ? 'bg-slate-800 text-gray-100 border-slate-600' : 'bg-white text-gray-900 border-gray-300'
-                  }`}
-                />
-              </div>
+
+
+// Font Size
+<div className="space-y-2">
+  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+    📏 Font Size
+  </label>
+  <select
+    value={fontSize}
+    onChange={(e) => onSettingsChange && onSettingsChange({ fontSize: parseInt(e.target.value) })}
+    className={`w-full p-2 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+      darkMode ? 'bg-slate-800 text-gray-100 border-slate-600' : 'bg-white text-gray-900 border-gray-300'
+    }`}
+  >
+    <option value="14">14px (Small)</option>
+    <option value="16">16px (Default)</option>
+    <option value="18">18px (Medium)</option>
+    <option value="20">20px (Large)</option>
+    <option value="24">24px (Extra Large)</option>
+  </select>
+</div>
+
+// Line Height
+<div className="space-y-2">
+  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+    📐 Line Height
+  </label>
+  <select
+    value={lineHeight}
+    onChange={(e) => onSettingsChange && onSettingsChange({ lineHeight: parseFloat(e.target.value) })}
+    className={`w-full p-2 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+      darkMode ? 'bg-slate-800 text-gray-100 border-slate-600' : 'bg-white text-gray-900 border-gray-300'
+    }`}
+  >
+    <option value="1.4">1.4 (Compact)</option>
+    <option value="1.6">1.6 (Default)</option>
+    <option value="1.8">1.8 (Comfortable)</option>
+    <option value="2.0">2.0 (Double Space)</option>
+  </select>
+</div>
+
             </div>
           </div>
         )}
@@ -890,7 +968,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   ? 'bg-slate-900 text-gray-100 placeholder-gray-500 border-2 border-slate-700 focus:border-cyan-500 focus:shadow-cyan-500/20'
                   : 'bg-white text-gray-800 placeholder-gray-400 border-2 border-gray-200 focus:border-blue-500 focus:shadow-blue-500/20'
               }`}
-              style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
+              style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight: lineHeight.toString() }}
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
             />
 
@@ -929,6 +1007,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           content={localContent}
           writingPrompt={initialPrompt}
           wordCount={currentWordCount}
+          analysis={aiAnalysis || analysis}
           user={user}
           darkMode={darkMode}
           openAIConnected={openAIConnected}
@@ -956,6 +1035,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       <StructureGuideModal
         isOpen={showStructureModal}
         onClose={() => setShowStructureModal(false)}
+        textType={textType}
       />
       <TipsModal
         isOpen={showTipsModalLocal}
@@ -966,6 +1046,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         <AIEvaluationReportDisplay
           report={aiEvaluationReport}
           essayText={localContent}
+          textType={textType} // Pass the writing type
           onClose={() => {
             setShowAIReport(false);
             setAiEvaluationReport(null);

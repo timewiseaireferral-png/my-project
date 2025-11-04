@@ -276,4 +276,40 @@ export class ChatSessionService {
   static setCurrentSessionId(sessionId: string | null): void {
     this.currentSessionId = sessionId;
   }
+
+  static async loadSession(userId: string, textType: string): Promise<{ sessionId: string; messages: ChatMessage[] }> {
+    try {
+      // Try to get the latest session for this user and text type
+      const { data, error } = await supabase
+        .from('chat_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('text_type', textType)
+        .order('last_accessed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error loading session:', error);
+        // Return empty session
+        const newSessionId = this.generateSessionId();
+        return { sessionId: newSessionId, messages: [] };
+      }
+
+      if (data) {
+        // Load messages for this session
+        const messages = await this.getMessages(data.session_id);
+        this.currentSessionId = data.session_id;
+        return { sessionId: data.session_id, messages };
+      }
+
+      // No existing session, create new one
+      const newSessionId = this.generateSessionId();
+      return { sessionId: newSessionId, messages: [] };
+    } catch (error) {
+      console.error('Error in loadSession:', error);
+      const newSessionId = this.generateSessionId();
+      return { sessionId: newSessionId, messages: [] };
+    }
+  }
 }

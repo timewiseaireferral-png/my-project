@@ -305,8 +305,18 @@ export default function WritingWorkspaceFixed() {
               {/* Right Sidebar: Coach Panel */}
               <div className="w-80 bg-gray-50 border-l border-gray-200 overflow-y-auto">
                 <EnhancedCoachPanel 
+                  textType={textType}
+                  content={currentText}
+                  writingPrompt={prompt}
+                  wordCount={wordCount}
                   analysis={analysis}
                   onApplyFix={onApplyFix} 
+                  // user={user} // Assuming user is not available in this component, but the component should handle it
+                  // darkMode={false} 
+                  // openAIConnected={true} 
+                  // openAILoading={false} 
+                  // selectedText={""} 
+                  // isFocusMode={false} 
                 />
               </div>
             </div>

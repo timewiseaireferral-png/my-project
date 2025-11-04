@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Link2, Trophy, Copy, CheckCircle, Gift } from 'lucide-react';
@@ -15,7 +14,6 @@ interface UserProfile {
   id: string;
   email: string;
   paid_referrals_count: number;
-  referral_code: string | null;
   // Add other necessary fields
 }
 
@@ -75,7 +73,7 @@ const ReferralPage: React.FC = () => {
 
   // The base URL for the referral link
   const referralBaseUrl = 'https://writingmate.co/signup'; 
-  const referralLink = profile?.referral_code ? `${referralBaseUrl}?ref=${profile.referral_code}` : 'Loading...';
+  const referralLink = user ? `${referralBaseUrl}?ref=${user.id}` : 'Loading...';
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -86,7 +84,7 @@ const ReferralPage: React.FC = () => {
 
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, email, paid_referrals_count, referral_code')
+        .select('id, email, paid_referrals_count')
         .eq('id', user.id)
         .single();
 
@@ -110,8 +108,8 @@ const ReferralPage: React.FC = () => {
   // Tiers adjusted to 3 Referrals for the final tier
   const tiers = [
     { count: 1, reward: '1 Free Month', description: 'After your first paid referral.' },
-    { count: 2, reward: '$5 Off for 6 Months', description: 'After your second paid referral.' },
-    { count: 3, reward: '$10 Off for 6 Months', description: 'After your third paid referral.' },
+    { count: 2, reward: '$5 Off for 3 Months', description: 'After your second paid referral.' },
+    { count: 3, reward: '$10 Off for 5 Months', description: 'After your third paid referral.' }, // Changed from 5 to 3 referrals
   ];
 
   const currentCount = profile?.paid_referrals_count || 0;
