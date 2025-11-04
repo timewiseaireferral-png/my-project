@@ -54,6 +54,7 @@ const CORE_FEATURES = [
 ];
 
 const PRO_FEATURES = [
+  { name: 'Access to Learning Mode', free: false, monthly: true, annual: true }, // New feature added
   { name: 'Option to write on your prompt (based on Essay type)', free: false, monthly: true, annual: true },
   { name: 'Unlimited AI Coaching & Feedback', free: false, monthly: true, annual: true },
   { name: 'Full Access to All 15+ Templates', free: false, monthly: true, annual: true },
@@ -104,13 +105,15 @@ const PLANS = [
 
 const FeatureItem = ({ feature, planType }) => {
   const isIncluded = feature[planType];
+
+  // If the feature is not included in the plan, we don't render it at all, as requested.
+  if (!isIncluded) {
+    return null;
+  }
+
   return (
     <li className="flex items-start gap-3">
-      {isIncluded ? (
-        <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-      ) : (
-        <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-      )}
+      <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
       <span className="text-gray-300">{feature.name}</span>
     </li>
   );
@@ -163,9 +166,7 @@ const PricingCard = ({ plan, planType, stripeButtonData }) => {
     : 'relative bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-purple-500/30 rounded-3xl p-8 backdrop-blur-sm';
 
   // The Stripe Buy Button will handle the actual checkout, but we keep the classes for styling the wrapper
-  const ctaClasses = isPopular
-    ? 'w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95'
-    : 'w-full bg-transparent border-2 border-white text-gray-300 font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95 hover:bg-purple-600 hover:text-white hover:border-purple-600';
+  const ctaClasses = 'w-full'; // Simplified to avoid conflicting styles
 
   return (
     <div className={cardClasses}>
@@ -245,16 +246,7 @@ export function PricingPageNew() {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
-      {/* Back to Home Button */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 flex justify-start">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-gray-200 border border-white rounded-full transition-all hover:shadow-lg font-medium"
-        >
-          <Home className="w-5 h-5" />
-          Back to Home
-        </button>
-      </div>
+
 
       {/* Hero Section */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
@@ -296,7 +288,7 @@ export function PricingPageNew() {
                 Refer a Friend, Get Rewarded
               </h2>
                 <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
-                  As a Pro subscriber, you can refer friends and earn rewards.
+                  As a paying customer, you have the exclusive opportunity to refer friends and earn rewards.
                 </p>
             </div>
 
