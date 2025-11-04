@@ -196,36 +196,39 @@ function AppContent() {
   // ADDITIONAL FIX: Reload prompt when navigating to writing page
   useEffect(() => {
     if (location.pathname === '/writing') {
-      const generatedPrompt = localStorage.getItem('generatedPrompt');
-      const customPrompt = localStorage.getItem('customPrompt');
-      const storedTextType = localStorage.getItem('selectedWritingType');
-      
-      console.log('📍 Navigated to writing page, checking localStorage:', {
-        generatedPrompt: generatedPrompt ? 'Found' : 'Not found',
-        customPrompt: customPrompt ? 'Found' : 'Not found',
-        storedTextType
-      });
+      // Use setTimeout to ensure localStorage is fully written before reading
+      setTimeout(() => {
+        const generatedPrompt = localStorage.getItem('generatedPrompt');
+        const customPrompt = localStorage.getItem('customPrompt');
+        const storedTextType = localStorage.getItem('selectedWritingType');
 
-      // Update prompt if we find one in localStorage
-      if (generatedPrompt && generatedPrompt !== prompt) {
-        setPrompt(generatedPrompt);
-        console.log('✅ Updated prompt from localStorage on navigation');
-      } else if (customPrompt && customPrompt !== prompt) {
-        setPrompt(customPrompt);
-        console.log('✅ Updated custom prompt from localStorage on navigation');
-      }
+        console.log('📍 Navigated to writing page, checking localStorage:', {
+          generatedPrompt: generatedPrompt ? generatedPrompt.substring(0, 50) + '...' : 'Not found',
+          customPrompt: customPrompt ? customPrompt.substring(0, 50) + '...' : 'Not found',
+          storedTextType
+        });
 
-      // Update text type if available
-      if (storedTextType && storedTextType !== textType) {
-        setTextType(storedTextType);
-        console.log('✅ Updated text type from localStorage on navigation');
-      }
+        // Update prompt if we find one in localStorage
+        if (generatedPrompt) {
+          setPrompt(generatedPrompt);
+          console.log('✅ Updated prompt from localStorage on navigation');
+        } else if (customPrompt) {
+          setPrompt(customPrompt);
+          console.log('✅ Updated custom prompt from localStorage on navigation');
+        }
 
-      // Mark popup flow as completed if we have a prompt
-      if ((generatedPrompt || customPrompt) && !popupFlowCompleted) {
-        setPopupFlowCompleted(true);
-        console.log('✅ Popup flow marked as completed on navigation');
-      }
+        // Update text type if available
+        if (storedTextType) {
+          setTextType(storedTextType);
+          console.log('✅ Updated text type from localStorage on navigation');
+        }
+
+        // Mark popup flow as completed if we have a prompt
+        if (generatedPrompt || customPrompt) {
+          setPopupFlowCompleted(true);
+          console.log('✅ Popup flow marked as completed on navigation');
+        }
+      }, 100); // Small delay to ensure localStorage is written
     }
   }, [location.pathname, prompt, textType, popupFlowCompleted]);
 
@@ -550,8 +553,24 @@ function AppContent() {
                   setPanelVisible={setPanelVisible}
                 />
               ) : (
-                <div className="flex-1 flex items-center justify-center text-gray-500">
-                  Please go back to the Dashboard to select a writing prompt.
+                <div className="flex-1 flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+                  <div className="text-center p-8 max-w-md">
+                    <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Writing Prompt Selected</h3>
+                    <p className="text-gray-600 dark:text-gray-300 mb-6">
+                      Please go back to the Dashboard and choose a writing prompt to get started.
+                    </p>
+                    <button
+                      onClick={() => navigate('/dashboard')}
+                      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105"
+                    >
+                      Go to Dashboard
+                    </button>
+                  </div>
                 </div>
               )}
             </WritingAccessCheck>
