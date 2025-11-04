@@ -61,24 +61,12 @@ export async function fetchReferralCount(userId: string): Promise<number> {
  * @param referralCode The user's unique referral code.
  * @returns The full referral URL.
  */
-
-// File: src/lib/referral.ts
-
-// ... (lines 1-63 are unchanged)
-
-/**
- * Generates the full referral link for the user.
- * @param referralCode The user's unique referral code.
- * @returns The full referral URL.
- */
 export function generateReferralLink(referralCode: string): string {
   // Assuming the base URL is the current window location, or a known environment variable
   // For simplicity, we'll use a placeholder and assume the app handles the routing
   const baseUrl = window.location.origin;
   return `${baseUrl}/signup?ref=${referralCode}`;
 }
-
-// ... (lines 70-105 are unchanged)
 
 /**
  * Determines the reward tier based on the number of referrals.

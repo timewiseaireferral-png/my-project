@@ -54,7 +54,6 @@ const CORE_FEATURES = [
 ];
 
 const PRO_FEATURES = [
-  { name: 'Access to Learning Mode', free: false, monthly: true, annual: true }, // New feature added
   { name: 'Option to write on your prompt (based on Essay type)', free: false, monthly: true, annual: true },
   { name: 'Unlimited AI Coaching & Feedback', free: false, monthly: true, annual: true },
   { name: 'Full Access to All 15+ Templates', free: false, monthly: true, annual: true },
@@ -105,15 +104,13 @@ const PLANS = [
 
 const FeatureItem = ({ feature, planType }) => {
   const isIncluded = feature[planType];
-
-  // If the feature is not included in the plan, we don't render it at all, as requested.
-  if (!isIncluded) {
-    return null;
-  }
-
   return (
     <li className="flex items-start gap-3">
-      <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+      {isIncluded ? (
+        <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+      ) : (
+        <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+      )}
       <span className="text-gray-300">{feature.name}</span>
     </li>
   );
@@ -166,7 +163,9 @@ const PricingCard = ({ plan, planType, stripeButtonData }) => {
     : 'relative bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-purple-500/30 rounded-3xl p-8 backdrop-blur-sm';
 
   // The Stripe Buy Button will handle the actual checkout, but we keep the classes for styling the wrapper
-  const ctaClasses = 'w-full'; // Simplified to avoid conflicting styles
+  const ctaClasses = isPopular
+    ? 'w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95'
+    : 'w-full bg-transparent border-2 border-white text-gray-300 font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95 hover:bg-purple-600 hover:text-white hover:border-purple-600';
 
   return (
     <div className={cardClasses}>
@@ -297,7 +296,7 @@ export function PricingPageNew() {
                 Refer a Friend, Get Rewarded
               </h2>
                 <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
-                  As a paying customer, you have the exclusive opportunity to refer friends and earn rewards.
+                  As a Pro subscriber, you can refer friends and earn rewards.
                 </p>
             </div>
 

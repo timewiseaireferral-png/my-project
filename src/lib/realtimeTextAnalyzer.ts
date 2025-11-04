@@ -1,3 +1,5 @@
+// Real-time text analysis engine for color-coded highlighting
+
 export interface TextHighlight {
   start: number;
   end: number;
@@ -195,12 +197,12 @@ export function analyzeText(text: string): { highlights: TextHighlight[], stats:
   // Calculate statistics
   const stats: AnalysisStats = {
     // Grammar and Spelling counts are now handled by the backend service.
-    grammar: 0,
-    spelling: 0,
+    grammar: 0, 
     weakWords: highlights.filter(h => h.type === 'weak-word').length,
     passiveVoice: highlights.filter(h => h.type === 'passive-voice').length,
     excessiveAdjectives: highlights.filter(h => h.type === 'excessive-adjectives').length,
-    sentenceIssues: highlights.filter(h => h.type.startsWith('sentence-') || h.type === 'repetitive-start').length,
+    sentenceIssues: highlights.filter(h => h.type.includes('sentence') || h.type === 'repetitive-start').length,
+    spelling: 0
   };
 
   return { highlights, stats };

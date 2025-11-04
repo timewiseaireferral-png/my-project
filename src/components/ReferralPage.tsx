@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Link2, Trophy, Copy, CheckCircle, Gift } from 'lucide-react';
-import { generateReferralLink } from '../lib/referral'; // <-- ADDED IMPORT
 
 // --- Custom Gradient Text Component for the Title (Simulated with Tailwind) ---
 const GradientText: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className = '' }) => (
@@ -74,8 +73,9 @@ const ReferralPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  // The referral link is generated using the function from the lib
-  const referralLink = profile?.referral_code ? generateReferralLink(profile.referral_code) : 'Loading...'; // <-- FIXED LINK GENERATION
+  // The base URL for the referral link
+  const referralBaseUrl = 'https://writingmate.co/signup'; 
+  const referralLink = profile?.referral_code ? `${referralBaseUrl}?ref=${profile.referral_code}` : 'Loading...';
 
   useEffect(( ) => {
     const fetchProfile = async () => {
@@ -137,8 +137,8 @@ const ReferralPage: React.FC = () => {
   // Tiers adjusted to 3 Referrals for the final tier
   const tiers = [
     { count: 1, reward: '1 Free Month', description: 'After your first paid referral.' },
-    { count: 2, reward: '$5 Off for 6 Months', description: 'After your second paid referral.' }, // <-- UPDATED REWARD
-    { count: 3, reward: '$10 Off for 6 Months', description: 'After your third paid referral.' }, // <-- UPDATED REWARD
+    { count: 2, reward: '$5 Off for 6 Months', description: 'After your second paid referral.' },
+    { count: 3, reward: '$10 Off for 6 Months', description: 'After your third paid referral.' },
   ];
 
   // FIX: Changed 'paid_referrals_count' to 'referral_count'
