@@ -114,7 +114,7 @@ export function PricingPage() {
               style={{ backgroundColor: COLORS.CARD_BACKGROUND }}
             >
               
-              {// Card Header - Best Value Badge */}
+              {/* Card Header - Best Value Badge */}
               <div 
                 className="text-white text-center py-3 text-lg font-semibold rounded-t-[18px]"
                 style={{ backgroundImage: `linear-gradient(to right, ${COLORS.BLUE}, ${COLORS.PURPLE_START})` }}
