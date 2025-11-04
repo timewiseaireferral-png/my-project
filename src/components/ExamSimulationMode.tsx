@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Clock, X, FileText, AlertCircle, CheckCircle, ChevronDown, Sun, Moon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
-import { NSWEvaluationReportGenerator } from '../components/NSWEvaluationReportGenerator';
 import { NSWEvaluationReportDisplay } from '../components/NSWEvaluationReportDisplay';
+// import { NSWEvaluationReportGenerator } from '../components/NSWEvaluationReportGenerator';
+
 
 interface ExamSimulationModeProps {
   content?: string;
