@@ -179,59 +179,28 @@ export function ExamSimulationMode({
     localStorage.setItem("examTimeUsed", (30 * 60).toString());
 
     try {
-      // Generate NSW Evaluation Report on auto-submit
-      const generatorReport = NSWEvaluationReportGenerator.generateReport({
-        essayContent: content,
-        textType: textType || 'narrative',
-        prompt: displayPrompt,
-        wordCount: content.trim().split(/\s+/).length,
-        targetWordCountMin: 100,
-        targetWordCountMax: 500,
+            // Call Netlify function for NSW Evaluation Report on auto-submit
+      const response = await fetch('/.netlify/functions/nsw-ai-evaluation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          essayContent: content,
+          textType: textType || 'narrative',
+          prompt: displayPrompt,
+        }),
       });
 
-      // Transform generator output to match display expectations
-      const transformedReport = {
-        overallScore: generatorReport.overallScore,
-        overallGrade: calculateGrade(generatorReport.overallScore),
-        domains: generatorReport.domains,
-        detailedFeedback: {
-          wordCount: content.trim().split(/\s+/).length,
-          sentenceVariety: {
-            simple: 0,
-            compound: 0,
-            complex: 0,
-            analysis: "Sentence variety analysis available in detailed feedback."
-          },
-          vocabularyAnalysis: {
-            sophisticatedWords: [],
-            repetitiveWords: [],
-            suggestions: []
-          },
-          literaryDevices: {
-            identified: [],
-            suggestions: []
-          },
-          structuralElements: {
-            hasIntroduction: true,
-            hasConclusion: true,
-            paragraphCount: content.split(/\n\s*\n/).filter(p => p.trim().length > 0).length,
-            coherence: "Good"
-          },
-          technicalAccuracy: {
-            spellingErrors: 0,
-            grammarIssues: [],
-            punctuationIssues: []
-          }
-        },
-        recommendations: [],
-        strengths: [],
-        areasForImprovement: [],
-        essayContent: generatorReport.cleanedEssay || content,
-        criticalWarnings: []
-      };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'AI Evaluation failed on the server.');
+      }
 
-      console.log("NSW Evaluation Report Generated (Auto-Submit):", transformedReport);
-      setEvaluationReport(transformedReport);
+      const evaluationReport = await response.json();
+
+      console.log("NSW Evaluation Report Generated (Auto-Submit):", evaluationReport);
+      setEvaluationReport(evaluationReport);
     } catch (error: any) {
       console.error("Error generating NSW evaluation report on auto-submit:", error);
       setEvaluationError(error.message || "Failed to generate evaluation report on auto-submit. Please try again.");
