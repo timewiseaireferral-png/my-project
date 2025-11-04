@@ -515,6 +515,34 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       setShowAIReport(true);
       setEvaluationStatus("success");
 
+      // CRITICAL: Also call ai-feedback endpoint to get grammar/vocabulary analysis for Writing Mate tabs
+      console.log('🔍 Calling ai-feedback for Grammar/Vocabulary analysis...');
+      try {
+        const feedbackResponse = await fetch("/.netlify/functions/ai-feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            essayText: localContent,
+            textType: textType
+          })
+        });
+
+        if (feedbackResponse.ok) {
+          const feedbackData = await feedbackResponse.json();
+          console.log('✅ AI Feedback received:', feedbackData);
+          console.log('Grammar corrections:', feedbackData.grammarCorrections?.length || 0);
+          console.log('Vocabulary enhancements:', feedbackData.vocabularyEnhancements?.length || 0);
+
+          // Set analysis data for Grammar and Vocabulary tabs
+          setAiAnalysis(feedbackData);
+        } else {
+          console.warn('⚠️ ai-feedback call failed, tabs will use fallback logic');
+        }
+      } catch (feedbackError) {
+        console.error('❌ ai-feedback error:', feedbackError);
+        console.warn('⚠️ Grammar/Vocabulary tabs will use fallback logic');
+      }
+
       console.log('✅ AI Evaluation complete!');
     } catch (error) {
       console.error("❌ NSW AI evaluation error:", error);
@@ -522,9 +550,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       setShowNSWEvaluation(false);
       alert(`There was an error during evaluation: ${error instanceof Error ? error.message : String(error)}. Please try again.`);
     }
-  }, [localContent, onSubmit, textType, effectivePrompt]);;
-
-
+  }, [localContent, onSubmit, textType, effectivePrompt]);
 
   const handleApplyFix = useCallback((fix: LintFix) => {
     if (textareaRef.current) {
@@ -960,14 +986,14 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
         {/* Bottom Submit Area */}
         <div className="flex-shrink-0 p-3 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
-            <NSWSubmitButton
-              content={localContent}
-              wordCount={currentWordCount}
-              isSubmitting={evaluationStatus === "loading"}
-              onSubmit={handleSubmitForEvaluation}
-              darkMode={darkMode}
-              minWords={50}
-            />
+          <NSWSubmitButton
+            content={localContent}
+            wordCount={currentWordCount}
+            isSubmitting={evaluationStatus === 'loading'}
+            onSubmit={handleSubmitForEvaluation}
+            darkMode={darkMode}
+            minWords={50}
+          />
         </div>
       </div>
 

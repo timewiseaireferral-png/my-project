@@ -246,7 +246,16 @@ export function PricingPageNew() {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
-
+      {/* Back to Home Button */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 flex justify-start">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-gray-200 border border-white rounded-full transition-all hover:shadow-lg font-medium"
+        >
+          <Home className="w-5 h-5" />
+          Back to Home
+        </button>
+      </div>
 
       {/* Hero Section */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
