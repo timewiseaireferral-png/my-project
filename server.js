@@ -14,7 +14,7 @@ async function createServer() {
   const vite = await createViteServer({
     server: { middlewareMode: true },
     appType: 'custom',
-    configFile: path.resolve(__dirname, 'project-bolt/project/vite.config.ts')
+    configFile: path.resolve(__dirname, 'vite.config.ts')
   });
 
   // Use vite's connect instance as middleware
@@ -34,7 +34,7 @@ async function createServer() {
     try {
       // 1. Read index.html
       let template = fs.readFileSync(
-        resolve('project-bolt/project/index.html'),
+        resolve('index.html'), // FIX: Removed 'project-bolt/project/'
         'utf-8'
       );
 
@@ -43,7 +43,7 @@ async function createServer() {
 
       // 3. Load the server entry. ssrLoadModule is an equivalent to import()
       const { render } = await vite.ssrLoadModule(
-        resolve('project-bolt/project/src/entry-server.tsx')
+        resolve('src/entry-server.tsx') // FIX: Removed 'project-bolt/project/'
       );
 
       // 4. Render the app HTML.
@@ -63,7 +63,7 @@ async function createServer() {
   });
 
   app.listen(5173, () => {
-    console.log('Server listening on http://localhost:5173' );
+    console.log('Server listening on http://localhost:5173'    );
   });
 }
 

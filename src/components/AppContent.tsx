@@ -8,7 +8,6 @@ import './layout-fix.css';
 
 // Add this import at the top with other imports
 import { EnhancedWritingLayoutNSW } from './EnhancedWritingLayoutNSW';
-import { LearningPage } from './LearningPage';
 import { EnhancedLearningHub } from './EnhancedLearningHub';
 import { LessonDetail } from './LessonDetail';
 import { LessonCard } from './LessonCard';
@@ -24,7 +23,6 @@ import { HowItWorksSection } from './HowItWorksSection';
 import { EnhancedSuccessSection } from './EnhancedSuccessSection';
 import { Footer } from './Footer';
 import { PaymentSuccessPage } from './PaymentSuccessPage';
-import { PricingPage } from './PricingPage';
 import { PricingPageNew } from './PricingPageNew';
 import { Dashboard } from './Dashboard';
 import { AuthModal } from './AuthModal';

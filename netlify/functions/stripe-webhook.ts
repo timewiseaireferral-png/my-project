@@ -35,25 +35,25 @@ async function applyReferralReward(paidReferralsCount: number, subscriptionId: s
         break;
 
       case 2:
-        // Tier 2: $5 Off for 3 Months
-        console.log('🎁 Applying Tier 2 Reward: $5 Off for 3 Months');
+        // Tier 2: $5 Off for 6 Months
+        console.log('🎁 Applying Tier 2 Reward: $5 Off for 6 Months');
         const couponTier2 = await stripe.coupons.create({
           amount_off: 500, // $5.00 in cents
           duration: 'repeating',
-          duration_in_months: 3,
+          duration_in_months: 6, // FIX: Changed from 3 to 6 months
           currency: 'usd',
           name: 'Tier 2 Referral Reward',
         });
         couponId = couponTier2.id;
         break;
 
-      case 5:
-        // Tier 3: $10 Off for 5 Months
-        console.log('🎁 Applying Tier 3 Reward: $10 Off for 5 Months');
+      case 3: // FIX: Changed from 5 to 3 referrals
+        // Tier 3: $10 Off for 6 Months
+        console.log('🎁 Applying Tier 3 Reward: $10 Off for 6 Months');
         const couponTier3 = await stripe.coupons.create({
           amount_off: 1000, // $10.00 in cents
           duration: 'repeating',
-          duration_in_months: 5,
+          duration_in_months: 6, // FIX: Changed from 5 to 6 months
           currency: 'usd',
           name: 'Tier 3 Referral Reward',
         });
@@ -176,29 +176,32 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     if (referrerId) {
       console.log(`📈 Referred by user: ${referrerId}. Incrementing count.`);
 
-      // Atomically increment the referrer's paid_referrals_count
-      const { data: rpcData, error: rpcError } = await supabase.rpc('increment_referral_count', {
-        user_id: referrerId,
+      // 1. Call the complete_referral function to increment count and update log
+      const { data: rpcData, error: rpcError } = await supabase.rpc('complete_referral', {
+        p_referred_user_id: userId, // The newly paid user
       });
 
       if (rpcError) {
-        console.error('❌ Error calling increment_referral_count RPC:', rpcError);
-      } else {
-        const newReferralCount = rpcData;
-        console.log(`✅ Referrer's new count: ${newReferralCount}`);
+        console.error('❌ Error calling complete_referral RPC:', rpcError);
+      } else if (rpcData === true) {
+        // The complete_referral function returns TRUE on success.
+        console.log(`✅ Referral completed for user ${userId}.`);
 
-        // Fetch the referrer's Stripe customer ID to apply the reward
+        // 2. Fetch the referrer's profile to apply the reward
         const { data: referrerProfile, error: referrerError } = await supabase
           .from('user_profiles')
-          .select('stripe_customer_id, stripe_subscription_id')
+          .select('stripe_customer_id, stripe_subscription_id, referral_count')
           .eq('id', referrerId)
           .single();
 
         if (referrerError || !referrerProfile) {
           console.error('❌ Error fetching referrer profile:', referrerError);
         } else {
-          await applyReferralReward(newReferralCount, referrerProfile.stripe_subscription_id);
+          // 3. Apply the reward based on the new referral_count
+          await applyReferralReward(referrerProfile.referral_count, referrerProfile.stripe_subscription_id);
         }
+      } else {
+        console.log(`⚠️ Referral not completed for user ${userId}. Check complete_referral logs.`);
       }
     }
     // END: Tiered Referral Logic

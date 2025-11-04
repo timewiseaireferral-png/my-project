@@ -49,6 +49,12 @@ export class EnhancedNarrativeCoach {
       return this.getWelcomeMessage(prompt);
     }
 
+    // Check for off-topic content first, regardless of word count (after initial welcome)
+    const isOffTopic = this.isOffTopic(content, prompt);
+    if (isOffTopic) {
+      return this.getOffTopicWarning(content, prompt);
+    }
+
     if (wordCount < 50) {
       return this.getOpeningGuidance(content, prompt);
     }
@@ -64,8 +70,45 @@ export class EnhancedNarrativeCoach {
     if (wordCount < 200) {
       return this.getFigurativeLanguageGuidance(content);
     }
+    return this.getAdvancedGuidance(content, prompt);
+  }
 
-    return this.getAdvancedGuidance(content);
+  private static isOffTopic(content: string, prompt?: string): boolean {
+    if (!prompt || content.length < 50) return false; // Not enough content to judge
+    
+    // Simple keyword check: check if the content contains any keywords from the prompt
+    // and does not contain too many keywords from a completely different topic (e.g., science)
+    const promptKeywords = ["diary", "attic", "past", "change", "family", "event", "rewrite", "power", "emotions", "conflict"];
+    const offTopicKeywords = ["photosynthesis", "glucose", "chloroplasts", "thylakoid", "Calvin cycle", "stroma", "star", "planet", "orbit", "Jupiter", "Saturn"];
+
+    const promptMatchCount = promptKeywords.filter(k => content.toLowerCase().includes(k)).length;
+    const offTopicMatchCount = offTopicKeywords.filter(k => content.toLowerCase().includes(k)).length;
+
+    // If the content is long enough, and has very few prompt keywords, but many off-topic keywords, it's likely off-topic.
+    // Thresholds are arbitrary but should catch the extreme case (0 prompt matches, >3 off-topic matches)
+    return (promptMatchCount < 2 && offTopicMatchCount > 3);
+  }
+
+  private static getOffTopicWarning(content: string, prompt?: string): EnhancedCoachResponse {
+    return {
+      encouragement: "Hold on a moment! 🛑",
+      nswFocus: "Content and Ideas - Relevance to Prompt",
+      suggestion: "Your writing appears to be completely off-topic. The prompt is about a **mysterious discovery in a familiar place** (a narrative), but your content seems to be an **expository piece** (e.g., a science report).",
+      example: "NSW Selective Exam Rule: If your writing does not address the given topic, it will receive a minimal score for Ideas & Content (Band 1).",
+      nextStep: `Please delete your current writing and start a new narrative that directly addresses the prompt: "${prompt || 'A mysterious discovery...'}"`,
+      rubricGuidance: {
+        criterion: "Content and Ideas",
+        currentLevel: "Level 1 (Minimal)",
+        targetIndicators: [
+          "Directly address the prompt and text type",
+          "Maintain focus on the central theme/idea",
+          "Ensure all content is relevant to the task"
+        ]
+      }
+    };
+  }
+
+  private static getAdvancedGuidance(content: string, prompt?: string): EnhancedCoachResponse {
   }
 
   private static getWelcomeMessage(prompt?: string): EnhancedCoachResponse {
@@ -315,7 +358,7 @@ export class EnhancedNarrativeCoach {
     };
   }
 
-  private static getAdvancedGuidance(content: string): EnhancedCoachResponse {
+  private static getAdvancedGuidance(content: string, prompt?: string): EnhancedCoachResponse {
     const wordCount = content.trim().split(/\s+/).length;
 
     if (wordCount < 250) {

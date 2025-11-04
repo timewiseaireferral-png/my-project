@@ -37,7 +37,7 @@ interface EnhancedLearningHubProps {
 }
 
 export const EnhancedLearningHub: React.FC<EnhancedLearningHubProps> = ({ onNavigate }) => {
-  const { progress } = useLearning();
+  const { progress, getRecommendations } = useLearning();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,7 +76,7 @@ export const EnhancedLearningHub: React.FC<EnhancedLearningHubProps> = ({ onNavi
     completed: progress.completedLessons.length,
     total: lessons.length,
     completionRate: Math.round((progress.completedLessons.length / lessons.length) * 100),
-    nextRecommended: progress.getRecommendations()[0] || null
+    nextRecommended: getRecommendations()[0] || null
   };
 
   if (viewMode === 'detail' && selectedLessonId) {

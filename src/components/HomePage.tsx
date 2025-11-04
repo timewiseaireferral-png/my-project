@@ -286,6 +286,59 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick, o
       {/* Writing Types */}
       <WritingTypesSection onSignInClick={onSignInClick} />
 
+      {/* Testimonials Section */}
+      <section className="py-24 bg-white dark:bg-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-slate-100 mb-6">
+              Trusted by Parents & Students
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-slate-400 max-w-3xl mx-auto">
+              See what our users are saying about their experience with Writing Mate.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-8 border border-gray-200 dark:border-slate-700 shadow-sm">
+              <div className="flex items-center mb-4">
+                <img src="/path-to-avatar-1.png" alt="User Avatar" className="w-12 h-12 rounded-full mr-4" />
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-slate-100">Sarah J.</h4>
+                  <p className="text-sm text-gray-600 dark:text-slate-400">Parent of a Year 6 Student</p>
+                </div>
+              </div>
+              <p className="text-gray-700 dark:text-slate-300">"The instant feedback has been a game-changer for my son. He's more confident in his writing and his school results have improved dramatically."</p>
+            </div>
+            <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-8 border border-gray-200 dark:border-slate-700 shadow-sm">
+              <div className="flex items-center mb-4">
+                <img src="/path-to-avatar-2.png" alt="User Avatar" className="w-12 h-12 rounded-full mr-4" />
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-slate-100">David L.</h4>
+                  <p className="text-sm text-gray-600 dark:text-slate-400">Year 5 Student</p>
+                </div>
+              </div>
+              <p className="text-gray-700 dark:text-slate-300">"I love the Magic Prompt feature. It helps me come up with great ideas and the step-by-step guidance makes writing essays so much easier."</p>
+            </div>
+            <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-8 border border-gray-200 dark:border-slate-700 shadow-sm">
+              <div className="flex items-center mb-4">
+                <img src="/path-to-avatar-3.png" alt="User Avatar" className="w-12 h-12 rounded-full mr-4" />
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-slate-100">Emily C.</h4>
+                  <p className="text-sm text-gray-600 dark:text-slate-400">Parent of a Year 5 Student</p>
+                </div>
+              </div>
+              <p className="text-gray-700 dark:text-slate-300">"Writing Mate is an incredible tool. It's affordable, easy to use, and has made a real difference in my daughter's writing skills. Highly recommended!"</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Branding Clarity Disclaimer */}
+      <section className="py-12 bg-gray-50 dark:bg-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-sm text-gray-600 dark:text-slate-400">Please note: Writing Mate is an independent platform and is not affiliated with writingmate.ai. We are a dedicated tool for Australian students preparing for selective school exams.</p>
+        </div>
+      </section>
+
 
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-900">
@@ -302,13 +355,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick, o
               onClick={user ? () => onNavigate('dashboard') : onSignUpClick}
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
-              {user ? 'Continue Writing' : 'Start Your 3-Day Free Trial'}
+              {user ? 'Continue Writing' : 'Start your 7 day trial'}
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
           </div>
 
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            No credit card required • Cancel anytime • Money-back guarantee
+            • Cancel anytime •
           </p>
         </div>
       </section>

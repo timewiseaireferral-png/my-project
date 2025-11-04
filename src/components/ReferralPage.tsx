@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Link2, Trophy, Copy, CheckCircle, Gift } from 'lucide-react';
@@ -13,7 +14,8 @@ const GradientText: React.FC<{ children: React.ReactNode, className?: string }> 
 interface UserProfile {
   id: string;
   email: string;
-  paid_referrals_count: number;
+  referral_count: number; // FIX: Changed from paid_referrals_count
+  referral_code: string | null;
   // Add other necessary fields
 }
 
@@ -73,7 +75,7 @@ const ReferralPage: React.FC = () => {
 
   // The base URL for the referral link
   const referralBaseUrl = 'https://writingmate.co/signup'; 
-  const referralLink = user ? `${referralBaseUrl}?ref=${user.id}` : 'Loading...';
+  const referralLink = profile?.referral_code ? `${referralBaseUrl}?ref=${profile.referral_code}` : 'Loading...';
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -84,13 +86,13 @@ const ReferralPage: React.FC = () => {
 
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, email, paid_referrals_count')
+        .select('id, email, referral_count, referral_code')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
-      } else {
+      } else if (data) {
         setProfile(data as UserProfile);
       }
       setLoading(false);
@@ -100,6 +102,8 @@ const ReferralPage: React.FC = () => {
   }, [user]);
 
   const handleCopy = () => {
+    // FIX: Check if referralLink is not 'Loading...' before copying
+    if (referralLink === 'Loading...') return;
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -108,11 +112,12 @@ const ReferralPage: React.FC = () => {
   // Tiers adjusted to 3 Referrals for the final tier
   const tiers = [
     { count: 1, reward: '1 Free Month', description: 'After your first paid referral.' },
-    { count: 2, reward: '$5 Off for 3 Months', description: 'After your second paid referral.' },
-    { count: 3, reward: '$10 Off for 5 Months', description: 'After your third paid referral.' }, // Changed from 5 to 3 referrals
+    { count: 2, reward: '$5 Off for 6 Months', description: 'After your second paid referral.' },
+    { count: 3, reward: '$10 Off for 6 Months', description: 'After your third paid referral.' },
   ];
 
-  const currentCount = profile?.paid_referrals_count || 0;
+  // FIX: Changed 'paid_referrals_count' to 'referral_count'
+  const currentCount = profile?.referral_count || 0;
 
   if (loading) {
     // Use the dark theme loading style
@@ -150,9 +155,17 @@ const ReferralPage: React.FC = () => {
             />
             <button
               onClick={handleCopy}
-              className="flex-shrink-0 px-6 py-3 bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white font-medium rounded-lg hover:from-[#6A33C9] hover:to-[#D9418E] transition duration-300 ease-in-out flex items-center justify-center shadow-lg shadow-purple-500/30"
+              // Disable button while loading
+              disabled={referralLink === 'Loading...'}
+              className={`flex-shrink-0 px-6 py-3 bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white font-medium rounded-lg transition duration-300 ease-in-out flex items-center justify-center shadow-lg shadow-purple-500/30 ${
+                referralLink === 'Loading...' 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:from-[#6A33C9] hover:to-[#D9418E]'
+              }`}
             >
-              {copied ? (
+              {referralLink === 'Loading...' ? (
+                'Loading...'
+              ) : copied ? (
                 <>
                   <CheckCircle className="w-5 h-5 mr-2" /> Copied!
                 </>

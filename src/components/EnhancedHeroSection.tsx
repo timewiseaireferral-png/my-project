@@ -89,6 +89,15 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
                 See How It Works
               </button>
             </div>
+            
+            {/* Data Security and Compliance Statement */}
+            <div className="mt-8 flex items-center space-x-2 text-sm text-gray-600 dark:text-slate-400">
+              <Star className="w-4 h-4 text-green-500 flex-shrink-0" />
+              <p className="font-medium">
+                <span className="font-bold text-gray-800 dark:text-slate-200">Trust & Compliance:</span> 
+                Student data is protected with end-to-end encryption and stored securely in Australia, compliant with Australian Privacy Principles (APPs).
+              </p>
+            </div>
           </div>
 
           {/* Right Column - Video Card */}

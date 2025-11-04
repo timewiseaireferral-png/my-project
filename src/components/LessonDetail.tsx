@@ -52,6 +52,26 @@ const LESSONS_DATA: { [key: number]: Lesson } = {
     points: 100,
     description: "Master the art of constructing coherent, well-developed paragraphs."
   },
+  4: {
+    id: 4,
+    title: "Advanced Punctuation",
+    category: "Grammar & Style",
+    prerequisites: [2],
+    duration: "18 min",
+    difficulty: "Intermediate",
+    points: 85,
+    description: "Use punctuation strategically to enhance your writing style and clarity."
+  },
+  5: {
+    id: 5,
+    title: "Descriptive Language Techniques",
+    category: "Creative Writing",
+    prerequisites: [3],
+    duration: "30 min",
+    difficulty: "Intermediate",
+    points: 120,
+    description: "Create vivid imagery and engage readers with powerful descriptive writing."
+  },
   6: {
     id: 6,
     title: "Narrative Structure & Plot",
@@ -62,6 +82,56 @@ const LESSONS_DATA: { [key: number]: Lesson } = {
     points: 150,
     description: "Learn to structure compelling narratives with strong plot development."
   },
+  7: {
+    id: 7,
+    title: "Character Development",
+    category: "Creative Writing",
+    prerequisites: [6],
+    duration: "28 min",
+    difficulty: "Intermediate",
+    points: 130,
+    description: "Create memorable, three-dimensional characters that drive your narrative."
+  },
+  8: {
+    id: 8,
+    title: "Setting Description",
+    category: "Creative Writing",
+    prerequisites: [5],
+    duration: "22 min",
+    difficulty: "Intermediate",
+    points: 95,
+    description: "Techniques for creating immersive and atmospheric settings."
+  },
+  9: {
+    id: 9,
+    title: "Dialogue Writing",
+    category: "Creative Writing",
+    prerequisites: [4, 7],
+    duration: "20 min",
+    difficulty: "Intermediate",
+    points: 110,
+    description: "Craft natural and purposeful dialogue that reveals character and advances plot."
+  },
+  10: {
+    id: 10,
+    title: "Plot Development",
+    category: "Creative Writing",
+    prerequisites: [6, 7],
+    duration: "25 min",
+    difficulty: "Intermediate",
+    points: 140,
+    description: "Deep dive into plot arcs, conflict, and pacing."
+  },
+  11: {
+    id: 11,
+    title: "Show Don't Tell",
+    category: "Creative Writing",
+    prerequisites: [8, 9],
+    duration: "18 min",
+    difficulty: "Advanced",
+    points: 160,
+    description: "Master the fundamental principle of showing action and emotion instead of simply telling."
+  },
   12: {
     id: 12,
     title: "Persuasive Writing Fundamentals",
@@ -71,6 +141,186 @@ const LESSONS_DATA: { [key: number]: Lesson } = {
     difficulty: "Intermediate",
     points: 110,
     description: "Master the basics of persuasive writing and argumentation."
+  },
+  13: {
+    id: 13,
+    title: "Persuasive Techniques",
+    category: "Persuasive Writing",
+    prerequisites: [12],
+    duration: "20 min",
+    difficulty: "Intermediate",
+    points: 130,
+    description: "Explore rhetorical devices, appeals to emotion, and logical fallacies."
+  },
+  14: {
+    id: 14,
+    title: "Persuasive Essay Structure",
+    category: "Persuasive Writing",
+    prerequisites: [12, 13],
+    duration: "30 min",
+    difficulty: "Intermediate",
+    points: 150,
+    description: "Structuring a compelling essay using PEEEL, introduction, and conclusion techniques."
+  },
+  15: {
+    id: 15,
+    title: "Persuasive Practice",
+    category: "Persuasive Writing",
+    prerequisites: [14],
+    duration: "40 min",
+    difficulty: "Advanced",
+    points: 200,
+    description: "Timed practice session applying all persuasive writing skills."
+  },
+  16: {
+    id: 16,
+    title: "Descriptive Basics",
+    category: "Creative Writing",
+    prerequisites: [5],
+    duration: "20 min",
+    difficulty: "Intermediate",
+    points: 90,
+    description: "Revisiting the core elements of strong descriptive writing."
+  },
+  17: {
+    id: 17,
+    title: "Setting Description",
+    category: "Creative Writing",
+    prerequisites: [16],
+    duration: "25 min",
+    difficulty: "Intermediate",
+    points: 110,
+    description: "Advanced techniques for creating immersive and atmospheric settings."
+  },
+  18: {
+    id: 18,
+    title: "Character Description",
+    category: "Creative Writing",
+    prerequisites: [16],
+    duration: "25 min",
+    difficulty: "Intermediate",
+    points: 110,
+    description: "Developing vivid and memorable character portraits."
+  },
+  19: {
+    id: 19,
+    title: "Sensory Details",
+    category: "Creative Writing",
+    prerequisites: [17, 18],
+    duration: "15 min",
+    difficulty: "Advanced",
+    points: 130,
+    description: "Engaging all five senses to bring writing to life."
+  },
+  20: {
+    id: 20,
+    title: "Advanced Imagery",
+    category: "Creative Writing",
+    prerequisites: [19],
+    duration: "20 min",
+    difficulty: "Advanced",
+    points: 150,
+    description: "Using sophisticated language to paint mental pictures."
+  },
+  21: {
+    id: 21,
+    title: "Metaphors & Similes",
+    category: "Creative Writing",
+    prerequisites: [20],
+    duration: "18 min",
+    difficulty: "Advanced",
+    points: 140,
+    description: "Mastering the use of figurative language for impact."
+  },
+  22: {
+    id: 22,
+    title: "Personification",
+    category: "Creative Writing",
+    prerequisites: [20],
+    duration: "18 min",
+    difficulty: "Advanced",
+    points: 140,
+    description: "Giving human qualities to inanimate objects."
+  },
+  23: {
+    id: 23,
+    title: "Mood & Tone",
+    category: "Creative Writing",
+    prerequisites: [21, 22],
+    duration: "20 min",
+    difficulty: "Advanced",
+    points: 160,
+    description: "Controlling the emotional atmosphere of your writing."
+  },
+  24: {
+    id: 24,
+    title: "Descriptive Practice Exam",
+    category: "Creative Writing",
+    prerequisites: [23],
+    duration: "45 min",
+    difficulty: "Expert",
+    points: 250,
+    description: "Timed practice session applying all descriptive and figurative language skills."
+  },
+  25: {
+    id: 25,
+    title: "Rhetorical Questions",
+    category: "Persuasive Writing",
+    prerequisites: [13],
+    duration: "15 min",
+    difficulty: "Advanced",
+    points: 100,
+    description: "Using questions for persuasive effect."
+  },
+  26: {
+    id: 26,
+    title: "Counter-Arguments",
+    category: "Persuasive Writing",
+    prerequisites: [14, 25],
+    duration: "25 min",
+    difficulty: "Advanced",
+    points: 170,
+    description: "Techniques for acknowledging and refuting opposing viewpoints."
+  },
+  27: {
+    id: 27,
+    title: "Persuasive Language",
+    category: "Persuasive Writing",
+    prerequisites: [25],
+    duration: "20 min",
+    difficulty: "Advanced",
+    points: 150,
+    description: "Selecting high-impact vocabulary for maximum persuasive power."
+  },
+  28: {
+    id: 28,
+    title: "Formal vs Informal",
+    category: "Persuasive Writing",
+    prerequisites: [27],
+    duration: "15 min",
+    difficulty: "Advanced",
+    points: 120,
+    description: "Understanding and applying appropriate tone and register for different audiences."
+  },
+  29: {
+    id: 29,
+    title: "Persuasive Speech",
+    category: "Persuasive Writing",
+    prerequisites: [28],
+    duration: "30 min",
+    difficulty: "Expert",
+    points: 180,
+    description: "Structuring and delivering a compelling persuasive speech."
+  },
+  30: {
+    id: 30,
+    title: "Final Practice Exam",
+    category: "All",
+    prerequisites: [26, 29],
+    duration: "60 min",
+    difficulty: "Expert",
+    points: 300,
+    description: "Comprehensive timed practice session covering all writing types and skills."
   }
 };
 
@@ -111,6 +361,30 @@ const LESSON_CONTENT: { [key: number]: { sections: Array<{ title: string; conten
       }
     ]
   },
+  4: {
+    sections: [
+      {
+        title: "Advanced Punctuation: Semicolons",
+        content: "Use a semicolon to join two closely related independent clauses (complete sentences) without a coordinating conjunction (and, but, or, etc.).\n\nExample: 'The sun was setting; the sky was a brilliant orange.'\n\nAlso use semicolons to separate items in a list when those items already contain commas.\n\nExample: 'I visited Paris, France; Rome, Italy; and Berlin, Germany.'"
+      },
+      {
+        title: "Advanced Punctuation: Colons",
+        content: "Use a colon to introduce a list, an explanation, or a quotation.\n\nExample: 'I have three favorite colors: blue, green, and purple.'\n\nEnsure the text before the colon is a complete sentence."
+      }
+    ]
+  },
+  5: {
+    sections: [
+      {
+        title: "Figurative Language: Simile and Metaphor",
+        content: "Simile: A comparison using 'like' or 'as'.\nExample: 'The moon was like a silver coin.'\n\nMetaphor: A direct comparison, stating one thing is another.\nExample: 'The moon was a silver coin in the velvet sky.'"
+      },
+      {
+        title: "Sensory Details",
+        content: "Engage the reader's five senses:\n\n• Sight: The emerald green of the forest canopy.\n• Sound: The crunch of dry leaves underfoot.\n• Smell: The sharp, metallic scent of rain.\n• Taste: The bitter tang of burnt sugar.\n• Touch: The rough bark of the ancient tree."
+      }
+    ]
+  },
   6: {
     sections: [
       {
@@ -123,6 +397,66 @@ const LESSON_CONTENT: { [key: number]: { sections: Array<{ title: string; conten
       }
     ]
   },
+  7: {
+    sections: [
+      {
+        title: "Internal and External Traits",
+        content: "Internal Traits: Personality, motivations, fears (e.g., brave, fearful, ambitious).\n\nExternal Traits: Appearance, mannerisms, clothing (e.g., tall, wears a worn leather jacket, has a nervous twitch)."
+      },
+      {
+        title: "Showing Character, Not Telling",
+        content: "Instead of: 'He was angry.'\n\nShow: 'His jaw clenched, and his knuckles turned white as he gripped the steering wheel.'"
+      }
+    ]
+  },
+  8: {
+    sections: [
+      {
+        title: "Creating Atmosphere",
+        content: "Use descriptive language to evoke a specific mood or feeling (e.g., eerie, cozy, oppressive).\n\nExample: 'The air hung thick and heavy, smelling of damp earth and forgotten things, a silence so profound it felt like a scream held back.'"
+      },
+      {
+        title: "Setting as a Character",
+        content: "Describe the setting so that it reflects the mood or personality of the characters or the plot.\n\nExample: A dark, stormy forest for a scene of conflict; a bright, open meadow for a scene of peace."
+      }
+    ]
+  },
+  9: {
+    sections: [
+      {
+        title: "Dialogue Tags and Action",
+        content: "Use varied dialogue tags (said, whispered, shouted) and actions to break up long speeches and show character interaction.\n\nExample: 'I don't know what you mean,' she whispered, her eyes darting to the closed door."
+      },
+      {
+        title: "Purposeful Dialogue",
+        content: "Every line of dialogue should:\n\n• Advance the plot\n• Reveal character\n• Provide necessary information\n\nAvoid small talk that doesn't serve a purpose."
+      }
+    ]
+  },
+  10: {
+    sections: [
+      {
+        title: "Conflict Types",
+        content: "Man vs. Man (External)\nMan vs. Nature (External)\nMan vs. Society (External)\nMan vs. Self (Internal)"
+      },
+      {
+        title: "Pacing and Tension",
+        content: "Fast Pacing: Use short sentences, quick dialogue, and focus on action (e.g., a chase scene).\n\nSlow Pacing: Use longer sentences, detailed descriptions, and internal monologue (e.g., a moment of reflection)."
+      }
+    ]
+  },
+  11: {
+    sections: [
+      {
+        title: "The Golden Rule of Writing",
+        content: "Telling: 'She was sad.' (Weak)\n\nShowing: 'A single tear traced a path through the dust on her cheek, and her shoulders slumped as if carrying a great weight.' (Strong)"
+      },
+      {
+        title: "Techniques for Showing",
+        content: "• Action: What the character does.\n• Dialogue: What the character says.\n• Sensory Details: What the character sees, hears, smells, tastes, and touches.\n• Internal Thoughts: What the character thinks."
+      }
+    ]
+  },
   12: {
     sections: [
       {
@@ -132,6 +466,218 @@ const LESSON_CONTENT: { [key: number]: { sections: Array<{ title: string; conten
       {
         title: "Persuasive Techniques",
         content: "• Rhetorical Questions: Questions that don't require answers\n• Repetition: Repeating key phrases for emphasis\n• Emotive Language: Words that appeal to emotions\n• Statistics: Using numbers to support arguments\n• Expert Opinion: Citing authorities on the subject\n• Analogies: Comparing to similar situations"
+      }
+    ]
+  },
+  13: {
+    sections: [
+      {
+        title: "Ethos, Pathos, Logos",
+        content: "Ethos (Credibility): Appeal to the audience's sense of right and wrong or the speaker's authority.\n\nPathos (Emotion): Appeal to the audience's emotions (fear, joy, anger).\n\nLogos (Logic): Appeal to the audience's sense of reason and logic (facts, statistics)."
+      },
+      {
+        title: "Repetition and Anaphora",
+        content: "Repetition: Repeating a word or phrase for emphasis.\n\nAnaphora: Repeating a word or phrase at the beginning of successive clauses (e.g., 'I have a dream... I have a dream...')"
+      }
+    ]
+  },
+  14: {
+    sections: [
+      {
+        title: "Introduction Structure",
+        content: "1. Hook: Grab the reader's attention (e.g., anecdote, startling fact).\n2. Background: Provide context on the issue.\n3. Thesis Statement: Clearly state your position (the main argument)."
+      },
+      {
+        title: "Conclusion Structure",
+        content: "1. Restate Thesis: Rephrase your main argument.\n2. Summarize Main Points: Briefly review your strongest evidence.\n3. Call to Action/Final Thought: Leave the reader with a powerful, lasting impression."
+      }
+    ]
+  },
+  15: {
+    sections: [
+      {
+        title: "Timed Practice Strategy",
+        content: "• 5 minutes: Plan your essay (PEEEL structure, main points).\n• 30 minutes: Write the body paragraphs, focusing on evidence and explanation.\n• 5 minutes: Write the introduction and conclusion.\n• 5 minutes: Proofread for grammar, spelling, and punctuation errors."
+      },
+      {
+        title: "Self-Correction Checklist",
+        content: "✓ Is my thesis clear?\n✓ Does each body paragraph have a clear Point?\n✓ Have I used strong Evidence and Explanation?\n✓ Is my tone appropriate for a persuasive essay?\n✓ Are there any spelling or grammar errors?"
+      }
+    ]
+  },
+  16: {
+    sections: [
+      {
+        title: "The Power of Adjectives and Adverbs",
+        content: "Choose strong, specific adjectives and adverbs over weak, generic ones.\n\nWeak: 'The dog ran quickly.' -> Strong: 'The terrier darted across the lawn.'"
+      },
+      {
+        title: "Focus on Specificity",
+        content: "Avoid general terms. Instead of 'a flower,' write 'a vibrant crimson rose with dew-kissed petals.'"
+      }
+    ]
+  },
+  17: {
+    sections: [
+      {
+        title: "Establishing Time and Place",
+        content: "Use details to ground the reader in the setting's time (e.g., 'The gas lamps flickered...') and place (e.g., 'The cobblestone street was slick with rain...')."
+      },
+      {
+        title: "Setting as a Character",
+        content: "Describe the setting so that it reflects the mood or personality of the characters or the plot.\n\nExample: A dark, stormy forest for a scene of conflict; a bright, open meadow for a scene of peace."
+      }
+    ]
+  },
+  18: {
+    sections: [
+      {
+        title: "Physical Description",
+        content: "Focus on a few striking details rather than a long list of features. What makes the character unique?\n\nExample: 'His eyes, the color of faded denim, held a permanent squint, as if he were always looking into the sun.'"
+      },
+      {
+        title: "Character Through Action",
+        content: "Describe how a character moves, speaks, and interacts with objects to reveal their personality."
+      }
+    ]
+  },
+  19: {
+    sections: [
+      {
+        title: "Sight and Sound",
+        content: "Sight: Colors, shapes, light, shadow.\nSound: Loud, soft, rhythmic, jarring, silence."
+      },
+      {
+        title: "Smell, Taste, and Touch",
+        content: "Smell: Earthy, metallic, sweet, acrid.\nTaste: Bitter, sweet, salty, sour, umami.\nTouch: Rough, smooth, cold, hot, sticky."
+      }
+    ]
+  },
+  20: {
+    sections: [
+      {
+        title: "Imagery and Emotion",
+        content: "Use imagery to convey emotion without naming it.\n\nTo show sadness: 'The sky wept a cold, gray rain.'"
+      },
+      {
+        title: "Synaesthesia",
+        content: "Blending senses (e.g., 'a loud color,' 'a sweet sound')."
+      }
+    ]
+  },
+  21: {
+    sections: [
+      {
+        title: "Effective Similes",
+        content: "Similes should be original and insightful, not clichés.\n\nCliché: 'As white as snow.'\nOriginal: 'The snow was a blanket of powdered sugar, untouched and inviting.'"
+      },
+      {
+        title: "Sustained Metaphor",
+        content: "Extending a metaphor over several sentences or a whole paragraph."
+      }
+    ]
+  },
+  22: {
+    sections: [
+      {
+        title: "Giving Life to the Inanimate",
+        content: "Personification makes abstract concepts or objects more relatable.\n\nExample: 'The wind howled its mournful song through the empty corridors.'\n\nExample: 'Time, the relentless thief, stole her youth.'"
+      }
+    ]
+  },
+  23: {
+    sections: [
+      {
+        title: "Creating Mood",
+        content: "Mood is the atmosphere of the piece, created by setting, word choice, and imagery.\n\nExample: A dark, stormy setting creates a mood of suspense or dread."
+      },
+      {
+        title: "Establishing Tone",
+        content: "Tone is the author's attitude toward the subject (e.g., serious, humorous, sarcastic, formal). Tone is conveyed through word choice and sentence structure."
+      }
+    ]
+  },
+  24: {
+    sections: [
+      {
+        title: "Descriptive Exam Focus",
+        content: "In a descriptive exam, your focus should be 80% on sensory details, figurative language, and creating a strong atmosphere, and 20% on plot."
+      },
+      {
+        title: "Checklist for Descriptive Writing",
+        content: "✓ Did I use at least one simile and one metaphor?\n✓ Did I appeal to at least three of the five senses?\n✓ Is the atmosphere clear and consistent?\n✓ Did I use strong, specific verbs and adjectives?"
+      }
+    ]
+  },
+  25: {
+    sections: [
+      {
+        title: "Rhetorical Questions for Impact",
+        content: "Use rhetorical questions to:\n\n• Engage the audience directly.\n• Emphasize a point.\n• Introduce a new topic.\n\nExample: 'Can we truly stand by and watch this injustice continue?'"
+      },
+      {
+        title: "Placement of Rhetorical Questions",
+        content: "Rhetorical questions are most effective at the beginning of a paragraph (as a topic sentence) or in the conclusion (as a final thought)."
+      }
+    ]
+  },
+  26: {
+    sections: [
+      {
+        title: "Acknowledging the Opposition",
+        content: "Start by fairly stating the opposing viewpoint (e.g., 'Some may argue that...'). This shows you are reasonable and strengthens your credibility (Ethos)."
+      },
+      {
+        title: "Refuting the Counter-Argument",
+        content: "Use strong evidence and logical reasoning (Logos) to dismantle the opposing argument. Use transition words like 'However,' 'Nevertheless,' or 'While this is true, it fails to consider...'"
+      }
+    ]
+  },
+  27: {
+    sections: [
+      {
+        title: "High-Impact Vocabulary",
+        content: "Replace weak words with powerful, persuasive alternatives.\n\nWeak: 'bad problem' -> Strong: 'dire predicament'\nWeak: 'very important' -> Strong: 'paramount, crucial'"
+      },
+      {
+        title: "Emotive Language",
+        content: "Use words that trigger a strong emotional response (Pathos).\n\nExample: 'The suffering of the innocent children' vs. 'The situation of the children.'"
+      }
+    ]
+  },
+  28: {
+    sections: [
+      {
+        title: "Formal Register",
+        content: "Use for essays, reports, and official documents.\n\nCharacteristics: No contractions (don't -> do not), complex sentences, objective tone, specialized vocabulary."
+      },
+      {
+        title: "Informal Register",
+        content: "Use for personal letters, diary entries, and casual dialogue.\n\nCharacteristics: Contractions allowed, simple sentences, subjective tone, slang/colloquialisms."
+      }
+    ]
+  },
+  29: {
+    sections: [
+      {
+        title: "Speech Structure",
+        content: "1. Salutation (e.g., 'Friends, colleagues, fellow citizens...').\n2. Introduction (Hook, Thesis).\n3. Body (Main arguments, PEEEL).\n4. Conclusion (Summary, Call to Action).\n5. Thank the audience."
+      },
+      {
+        title: "Delivery Techniques",
+        content: "• Pause for emphasis.\n• Vary your pace and volume.\n• Use rhetorical devices (repetition, anaphora) to make the speech memorable."
+      }
+    ]
+  },
+  30: {
+    sections: [
+      {
+        title: "Exam Strategy",
+        content: "• Read the prompt carefully: Identify the text type, audience, and purpose.\n• Time Management: Allocate time for planning, writing, and proofreading.\n• Choose your best text type: Select the one you are most confident in."
+      },
+      {
+        title: "Final Checklist",
+        content: "✓ Did I meet the requirements of the prompt?\n✓ Is my writing technically correct (grammar, spelling, punctuation)?\n✓ Did I use sophisticated techniques appropriate for the text type?\n✓ Is my message clear and engaging?"
       }
     ]
   }
