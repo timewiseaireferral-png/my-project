@@ -1,4 +1,3 @@
-// src/lib/openai.ts - FIXED VERSION that calls backend functions
 // This file handles all OpenAI-related functionality by calling Netlify functions
 
 interface ChatRequest {
@@ -244,6 +243,7 @@ export async function evaluateEssay(content: string, textType: string, isPractic
       return result.feedback || result || "Feedback generated successfully!";
     } else {
       const errorData = await res.json();
+      console.error("Error evaluating essay:", res.status, errorData);
       throw new Error(`HTTP ${res.status}: ${errorData.error || res.statusText}`);
     }
   } catch (error) {
@@ -275,7 +275,7 @@ function getFallbackEvaluation(content: string, textType: string): string {
 }
 
 // Get NSW Selective specific feedback via backend
-export async function getNSWSelectiveFeedback(content: string, textType: string, assistanceLevel: string): Promise<DetailedFeedback> {
+export async function getNSWSelectiveFeedback(content: string, textType: string, assistanceLevel: string, additionalContext: string[]): Promise<DetailedFeedback> {
   try {
     const response = await fetch("/.netlify/functions/ai-feedback", {
       method: "POST",
@@ -286,6 +286,7 @@ export async function getNSWSelectiveFeedback(content: string, textType: string,
         content,
         textType,
         assistanceLevel,
+        additionalContext, // Added the missing fourth argument
       }),
     });
 
@@ -300,163 +301,6 @@ export async function getNSWSelectiveFeedback(content: string, textType: string,
   } catch (error) {
     console.error("Error fetching NSW feedback from backend:", error);
     // Fallback to a basic error message or simplified feedback structure
-    return {
-      overallScore: 0,
-      criteriaScores: {
-        ideasAndContent: 0,
-        textStructureAndOrganization: 0,
-        languageFeaturesAndVocabulary: 0,
-        spellingPunctuationAndGrammar: 0,
-      },
-      feedbackCategories: [],
-      grammarCorrections: [],
-      vocabularyEnhancements: [],
-    };
+    throw new Error("Failed to get AI feedback. Please check your connection or try again later.");
   }
-}
-
-// Get writing structure guidance
-export async function getWritingStructure(textType: string): Promise<string> {
-  try {
-    const res = await fetch("/.netlify/functions/writing-structure", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ textType })
-    });
-
-    if (res.ok) {
-      const result = await res.json();
-      return result.structure;
-    } else {
-      throw new Error(`HTTP ${res.status}`);
-    }
-  } catch (error) {
-    console.error('Error getting structure guidance:', error);
-    return getFallbackStructure(textType);
-  }
-}
-
-// Fallback structure guidance
-function getFallbackStructure(textType: string): string {
-  const structures = {
-    narrative: `Narrative Structure:\n• Opening: Hook the reader\n• Rising Action: Build tension\n• Climax: Turning point\n• Falling Action: Resolve conflict\n• Resolution: Satisfying conclusion`,
-    persuasive: `Persuasive Structure:\n• Introduction: State your position\n• Body: Arguments with evidence\n• Counter-argument: Address opposing views\n• Conclusion: Reinforce position`,
-    expository: `Expository Structure:\n• Introduction: Introduce topic\n• Body: Main points with examples\n• Conclusion: Summarize key points`,
-    descriptive: `Descriptive Structure:\n• Introduction: Set the scene\n• Body: Sensory details\n• Conclusion: Lasting impression`,
-    creative: `Creative Structure:\n• Hook: Intriguing start\n• Development: Build concept\n• Climax: Key moment\n• Resolution: Satisfying end`
-  };
-  return structures[textType.toLowerCase()] || structures.narrative;
-}
-
-// Get synonyms for words
-export async function getSynonyms(word: string): Promise<string[]> {
-  try {
-    const res = await fetch("/.netlify/functions/get-synonyms", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word })
-    });
-
-    if (res.ok) {
-      const result = await res.json();
-      return result.synonyms || getFallbackSynonyms(word);
-    } else {
-      throw new Error(`HTTP ${res.status}`);
-    }
-  } catch (error) {
-    console.error('Error getting synonyms:', error);
-    return getFallbackSynonyms(word);
-  }
-}
-
-// Fallback synonyms for common words
-function getFallbackSynonyms(word: string): string[] {
-  const synonymMap = {
-    'said': ['whispered', 'exclaimed', 'muttered', 'declared', 'announced'],
-    'big': ['enormous', 'massive', 'gigantic', 'colossal', 'immense'],
-    'small': ['tiny', 'miniature', 'petite', 'minuscule', 'compact'],
-    'good': ['excellent', 'outstanding', 'remarkable', 'exceptional', 'superb'],
-    'bad': ['terrible', 'awful', 'dreadful', 'horrible', 'atrocious'],
-    'happy': ['delighted', 'ecstatic', 'joyful', 'elated', 'cheerful'],
-    'sad': ['melancholy', 'sorrowful', 'dejected', 'despondent', 'mournful'],
-    'fast': ['swift', 'rapid', 'speedy', 'quick', 'hasty'],
-    'slow': ['sluggish', 'leisurely', 'gradual', 'unhurried', 'deliberate'],
-    'beautiful': ['gorgeous', 'stunning', 'magnificent', 'breathtaking', 'exquisite']
-  };
-  return synonymMap[word.toLowerCase()] || ['sophisticated', 'enhanced', 'improved', 'refined', 'elevated'];
-}
-
-// Rephrase sentences for better vocabulary
-export async function rephraseSentence(sentence: string): Promise<string> {
-  try {
-    const res = await fetch("/.netlify/functions/rephrase-sentence", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sentence })
-    });
-
-    if (res.ok) {
-      const result = await res.json();
-      return result.rephrased;
-    } else {
-      throw new Error(`HTTP ${res.status}`);
-    }
-  } catch (error) {
-    console.error('Error rephrasing sentence:', error);
-    return `Try using more specific verbs and descriptive adjectives in: "${sentence}"`;
-  }
-}
-
-// Identify common mistakes
-export async function identifyCommonMistakes(content: string): Promise<string[]> {
-  try {
-    const res = await fetch("/.netlify/functions/identify-mistakes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content })
-    });
-
-    if (res.ok) {
-      const result = await res.json();
-      return result.mistakes || ["Check for subject-verb agreement issues.", "Ensure consistent tense usage.", "Review punctuation, especially commas and apostrophes."];
-    } else {
-      throw new Error(`HTTP ${res.status}`);
-    }
-  } catch (error) {
-    console.error('Error identifying common mistakes:', error);
-    return ["Check for subject-verb agreement issues.", "Ensure consistent tense usage.", "Review punctuation, especially commas and apostrophes."];
-  }
-}
-
-// Get vocabulary suggestions for specific text types
-export async function getTextTypeVocabulary(textType: string): Promise<string[]> {
-  try {
-    const res = await fetch("/.netlify/functions/text-type-vocabulary", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ textType })
-    });
-
-    if (res.ok) {
-      const result = await res.json();
-      return result.vocabulary || getFallbackVocabulary(textType);
-    } else {
-      throw new Error(`HTTP ${res.status}`);
-    }
-  } catch (error) {
-    console.error('Error getting text type vocabulary:', error);
-    return getFallbackVocabulary(textType);
-  }
-}
-
-// Fallback vocabulary for different text types
-function getFallbackVocabulary(textType: string): string[] {
-  const vocabularyMap = {
-    narrative: ["captivating", "mesmerizing", "extraordinary", "bewildering", "exhilarating", "profound", "eloquent", "vivid", "compelling", "intricate"],
-    persuasive: ["compelling", "unequivocal", "substantiate", "advocate", "imperative", "irrefutable", "galvanize", "articulate", "resonate", "underscore"],
-    expository: ["elucidate", "comprehend", "delineate", "corroborate", "disseminate", "paradigm", "ubiquitous", "pertinent", "conjecture", "nuance"],
-    descriptive: ["ethereal", "serene", "luminous", "ephemeral", "cacophony", "mellifluous", "panoramic", "verdant", "opulent", "resplendent"],
-    creative: ["whimsical", "surreal", "enigmatic", "transcendent", "kaleidoscopic", "juxtaposition", "benevolent", "malevolent", "epiphany", "soliloquy"]
-  };
-  return vocabularyMap[textType.toLowerCase()] || vocabularyMap.narrative;
 }
