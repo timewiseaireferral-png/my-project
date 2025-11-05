@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 interface NSWStandaloneSubmitSystemProps {
   content: string;
@@ -53,6 +53,10 @@ export function NSWStandaloneSubmitSystem({
 
       const report = await response.json();
       console.log("NSWStandaloneSubmitSystem: AI evaluation received:", report);
+      
+      // CRIT-01/CRIT-02 Fix: Clear the local storage item that causes the 400 error on second attempt
+      localStorage.removeItem("lastEvaluationReport"); 
+      
       onComplete(report);
     } catch (err: any) {
       console.error("NSWStandaloneSubmitSystem: Submission error:", err);
