@@ -4,6 +4,14 @@ import { analyzeText } from '../lib/textAnalyzer';
 import { analyzeContext } from '../lib/contextualAwareness';
 import { enhancedIntelligentResponseGenerator, EnhancedCoachingContext } from '../lib/enhancedIntelligentResponseGenerator';
 
+// Assuming these components exist in your project structure based on our previous analysis
+import GrammarCorrectionPanel from './GrammarCorrectionPanel';
+import SentenceStructurePanel from './SentenceStructurePanel';
+import WritingIssuesPanel from './WritingIssuesPanel';
+import VocabularyEnhancementPanel from './VocabularyEnhancementPanel';
+import RubricPanel from './RubricPanel';
+
+
 interface ChatMessage {
   id: string;
   text: string;
@@ -30,6 +38,21 @@ export function FixedEnhancedTabbedCoachPanel({
   const [activeTab, setActiveTab] = useState('coach');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
+  
+  // CRIT-03 Fix: Import useDebounce hook
+  const useDebounce = (value: any, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+    return debouncedValue;
+  };
+  
   const [isLoading, setIsLoading] = useState(false);
   const [currentTextType, setCurrentTextType] = useState(textType);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -70,6 +93,68 @@ export function FixedEnhancedTabbedCoachPanel({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // CRIT-03 Fix: Implement real-time feedback logic
+  const debouncedContentChange = useDebounce(content, 1500); // Debounce content changes by 1.5s
+
+  useEffect(() => {
+    if (debouncedContentChange.trim().length > 50) { // Only trigger if content is substantial
+      handleRealTimeFeedback();
+    }
+  }, [debouncedContentChange]);
+
+  const handleRealTimeFeedback = async () => {
+    // Logic to analyze content and generate a non-chat response
+    // This will be a simplified version of handleSendMessage
+    if (isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      // Analyze current content
+      const textAnalysis = analyzeText(content);
+      const contextualState = analyzeContext(content, textAnalysis);
+
+      // Create enhanced coaching context
+      const coachingContext: EnhancedCoachingContext = {
+        textType: currentTextType,
+        currentContent: content,
+        analysis: textAnalysis,
+        contextualState,
+        timeElapsed,
+        wordCount: content.split(/\s+/).filter(word => word.length > 0).length
+      };
+
+      // Generate a non-chat, real-time tip
+      const response = await enhancedIntelligentResponseGenerator.generateRealTimeTip(
+        coachingContext
+      );
+
+      if (response && response.message) {
+        const aiMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          text: `🤖 Real-Time Tip: ${response.message}`,
+          isUser: false,
+          timestamp: new Date(),
+          priority: response.priority || 'low'
+        };
+
+        // Only add the message if it's new and different from the last one
+        setMessages(prev => {
+          const lastMessage = prev[prev.length - 1];
+          if (lastMessage && lastMessage.text === aiMessage.text) {
+            return prev;
+          }
+          return [...prev, aiMessage];
+        });
+      }
+
+    } catch (error) {
+      console.error('Error generating real-time feedback:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -235,7 +320,6 @@ export function FixedEnhancedTabbedCoachPanel({
       </div>
 
       {/* Scrollable Content Area */}
-      {/* Scrollable Content Area */}
       <div className="flex-1 overflow-hidden">
         {(() => {
           switch (activeTab) {
@@ -347,5 +431,6 @@ export function FixedEnhancedTabbedCoachPanel({
           }
         })()}
       </div>
+    </div>
   );
 }
