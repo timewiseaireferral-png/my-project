@@ -215,6 +215,12 @@ def get_nsw_selective_feedback(content: str, text_type: str, assistance_level: s
         feedback_data["id"] = "generated-id" # Placeholder, ideally a unique ID
         
         # 1. Validate LLM-generated positions
+        # The LLM is instructed to return an empty list for grammarCorrections, 
+        # but the key might be missing entirely if the LLM is slightly off-spec.
+        # We ensure it exists before validation.
+        if "grammarCorrections" not in feedback_data:
+            feedback_data["grammarCorrections"] = []
+            
         feedback_data = validate_feedback_positions(feedback_data, content)
         
         # 2. Integrate robust grammar checking
