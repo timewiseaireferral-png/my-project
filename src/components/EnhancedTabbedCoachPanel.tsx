@@ -26,6 +26,8 @@ interface EnhancedTabbedCoachPanelProps {
   content: string;
   textType?: 'narrative' | 'persuasive' | 'expository' | 'descriptive' | 'creative';
   timeElapsed?: number;
+  // Fix: Panel-Steps - Add currentWordCount prop
+  currentWordCount: number;
 }
 
 export function EnhancedTabbedCoachPanel({
@@ -38,6 +40,7 @@ export function EnhancedTabbedCoachPanel({
   const [activeTab, setActiveTab] = useState('coach');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
+  const [dynamicExamples, setDynamicExamples] = useState<string[]>([]); // Fix: Panel-Examples - State for dynamic examples
   
   // CRIT-03 Fix: Implement useDebounce hook for real-time feedback
   const useDebounce = (value: any, delay: number) => {
@@ -100,8 +103,10 @@ export function EnhancedTabbedCoachPanel({
   const debouncedContentChange = useDebounce(content, 1500); // Debounce content changes by 1.5s
 
   useEffect(() => {
-    if (debouncedContentChange.trim().length > 50) { // Only trigger if content is substantial
+    const contentWordCount = debouncedContentChange.trim().split(/\s+/).filter(w => w.length > 0).length;
+    if (contentWordCount > 50) { // Only trigger if content is substantial
       handleRealTimeFeedback();
+      handleDynamicExamples(debouncedContentChange); // Fix: Panel-Examples - Trigger dynamic example generation
     }
   }, [debouncedContentChange]);
 
@@ -149,6 +154,30 @@ export function EnhancedTabbedCoachPanel({
       console.error('Error generating real-time feedback:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fix: Panel-Examples - Logic to generate dynamic examples
+  const handleDynamicExamples = async (currentContent: string) => {
+    if (currentContent.trim().length < 50) {
+      setDynamicExamples([]);
+      return;
+    }
+
+    try {
+      // Placeholder for actual API call to generate examples
+      // In a real scenario, this would call an LLM endpoint
+      const mockExamples = [
+        `Try a stronger verb: Replace "walked" with "trudged" or "sauntered" in your last sentence.`,
+        `Consider a simile for your description: "The old house stood like a forgotten sentinel."`,
+        `Improve your opening: Instead of "It was a dark and stormy night," try a more active start.`,
+        `Add sensory detail: What does the air smell like in your current scene?`,
+        `Vary your sentence structure: Start a sentence with a dependent clause.`,
+      ];
+      setDynamicExamples(mockExamples.slice(0, 3 + Math.floor(Math.random() * 3))); // 3-5 examples
+    } catch (error) {
+      console.error('Error generating dynamic examples:', error);
+      setDynamicExamples([]);
     }
   };
 
@@ -238,6 +267,30 @@ export function EnhancedTabbedCoachPanel({
     }
   };
 
+  // Fix: Panel-Examples - Logic to generate dynamic examples
+  const handleDynamicExamples = async (currentContent: string) => {
+    if (currentContent.trim().length < 50) {
+      setDynamicExamples([]);
+      return;
+    }
+
+    try {
+      // Placeholder for actual API call to generate examples
+      // In a real scenario, this would call an LLM endpoint
+      const mockExamples = [
+        `Try a stronger verb: Replace "walked" with "trudged" or "sauntered" in your last sentence.`,
+        `Consider a simile for your description: "The old house stood like a forgotten sentinel."`,
+        `Improve your opening: Instead of "It was a dark and stormy night," try a more active start.`,
+        `Add sensory detail: What does the air smell like in your current scene?`,
+        `Vary your sentence structure: Start a sentence with a dependent clause.`,
+      ];
+      setDynamicExamples(mockExamples.slice(0, 3 + Math.floor(Math.random() * 3))); // 3-5 examples
+    } catch (error) {
+      console.error('Error generating dynamic examples:', error);
+      setDynamicExamples([]);
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -262,8 +315,9 @@ export function EnhancedTabbedCoachPanel({
     }
   };
 
-  const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
-  const progress = Math.min((wordCount / 400) * 100, 100);
+  // Use the currentWordCount prop passed from the parent
+  const { currentWordCount } = props;
+  const progress = Math.min((currentWordCount / 400) * 100, 100);
   const completionPercentage = Math.floor(progress);
 
   return (
@@ -273,7 +327,7 @@ export function EnhancedTabbedCoachPanel({
         {/* Top section with title and timer */}
         <div className="px-4 py-3">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-lg">Coach</h3>
+	            <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-lg">Writing Mate Coach</h3>
             <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
               {Math.floor(timeElapsed / 60)}:{(timeElapsed % 60).toString().padStart(2, '0')}/40:00
             </div>
@@ -283,16 +337,19 @@ export function EnhancedTabbedCoachPanel({
           <div className="mb-3">
             <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
               <span>Progress to 400 words</span>
-              <span className="text-green-600 dark:text-green-400 font-medium">
-                {wordCount > 350 ? 'Ahead • Excellent pace!' : 'On track • Good pace!'}
-              </span>
+	              <span className="text-green-600 dark:text-green-400 font-medium">
+	                {currentWordCount > 350 ? 'Ahead • Excellent pace!' : 'On track • Good pace!'}
+	              </span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+	            <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
+	              <div
+	                className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
+	                style={{ width: `${progress}%` }}
+	              />
+	            </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Word Count: {currentWordCount}
+              </div>
           </div>
         </div>
 
@@ -354,7 +411,8 @@ export function EnhancedTabbedCoachPanel({
                   placeholder="Ask your coach a question..."
                   rows={1}
                   className="flex-grow p-3 border border-gray-300 dark:border-slate-600 rounded-lg resize-none focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white"
-                  disabled={isLoading}
+                  // Fix: Panel-Chat - Enable chat input field once user starts typing (content.trim().length > 0)
+                  disabled={isLoading || content.trim().length === 0}
                 />
                 <button
                   onClick={handleSendMessage}
@@ -375,23 +433,32 @@ export function EnhancedTabbedCoachPanel({
           </div>
         )}
 
-        {activeTab === 'ideas' && (
-          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
-            <h4 className="font-semibold text-lg text-yellow-800 dark:text-yellow-200 mb-2 flex items-center">
-              <Lightbulb className="w-5 h-5 mr-2" /> Idea Generation
-            </h4>
-            <p className="text-sm text-yellow-700 dark:text-yellow-300">
-              This tab will provide dynamic ideas and suggestions based on your current text and the chosen text type.
-              For example, it could suggest a better metaphor, a stronger opening hook, or a more compelling argument.
-            </p>
-            {/* Placeholder for dynamic content */}
-            <div className="mt-3 p-3 bg-white dark:bg-slate-800 rounded-md border border-yellow-300 dark:border-yellow-700">
-              <p className="text-gray-600 dark:text-gray-400 italic">
-                Start writing to generate dynamic ideas...
-              </p>
-            </div>
-          </div>
-        )}
+	        {activeTab === 'ideas' && (
+	          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
+	            <h4 className="font-semibold text-lg text-yellow-800 dark:text-yellow-200 mb-2 flex items-center">
+	              <Lightbulb className="w-5 h-5 mr-2" /> Dynamic Examples
+	            </h4>
+	            <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-4">
+	              Here are some dynamic examples and suggestions based on your current writing to help you improve.
+	            </p>
+	            {/* Fix: Panel-Examples - Dynamic content */}
+	            {dynamicExamples.length > 0 ? (
+	              <ul className="space-y-3">
+	                {dynamicExamples.map((example, index) => (
+	                  <li key={index} className="p-3 bg-white dark:bg-slate-800 rounded-md border border-yellow-300 dark:border-yellow-700 shadow-sm text-sm text-gray-700 dark:text-gray-300">
+	                    {example}
+	                  </li>
+	                ))}
+	              </ul>
+	            ) : (
+	              <div className="mt-3 p-3 bg-white dark:bg-slate-800 rounded-md border border-yellow-300 dark:border-yellow-700">
+	                <p className="text-gray-600 dark:text-gray-400 italic">
+	                  Keep writing! Once you have at least 50 words, I'll generate dynamic examples to help you.
+	                </p>
+	              </div>
+	            )}
+	          </div>
+	        )}
 
         {activeTab === 'structure' && (
           <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
