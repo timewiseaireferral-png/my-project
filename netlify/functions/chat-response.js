@@ -194,7 +194,7 @@ Please provide a helpful, encouraging response that addresses their specific que
     
     // Return a safe fallback response
     return {
-      statusCode: 500, // Changed to 500 to reflect a server error, not a successful fallback
+      statusCode: 502, // Changed to 502 to match the expected Bad Gateway error from the client
       headers,
       body: JSON.stringify({ 
         error: "Internal Server Error: Could not process request.",
