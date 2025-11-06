@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Lightbulb, BookOpen, Zap, CheckCircle, Wrench, Send } from 'lucide-react';
+import { MessageCircle, Lightbulb, BookOpen, Zap, CheckCircle, Wrench, Send, Target, Loader2 } from 'lucide-react';
 import { analyzeText } from '../lib/textAnalyzer';
 import { analyzeContext } from '../lib/contextualAwareness';
 import { enhancedIntelligentResponseGenerator, EnhancedCoachingContext } from '../lib/enhancedIntelligentResponseGenerator';
