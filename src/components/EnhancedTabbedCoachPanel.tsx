@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Lightbulb, BookOpen, Zap, CheckCircle, Wrench, Send } from 'lucide-react';
 import { analyzeText } from '../lib/textAnalyzer';
 import { analyzeContext } from '../lib/contextualAwareness';
-import { enhancedIntelligentResponseGenerator, EnhancedCoachingContext } from '../lib/enhancedIntelligentResponseGenerator';
-
+import { EnhancedNarrativeCoach, EnhancedCoachingContext } from '../lib/enhancedIntelligentResponseGenerator';
 
 // Assuming these components exist in your project structure based on our previous analysis
 import GrammarCorrectionPanel from './GrammarCorrectionPanel';
@@ -68,7 +67,7 @@ export function EnhancedTabbedCoachPanel({
   useEffect(() => {
     if (textType !== currentTextType) {
       setCurrentTextType(textType);
-      enhancedIntelligentResponseGenerator.setTextType(textType);
+      EnhancedNarrativeCoach.setTextType(textType);
 
       // Add a system message about the genre change
       const genreChangeMessage: ChatMessage = {
@@ -135,7 +134,7 @@ export function EnhancedTabbedCoachPanel({
         wordCount: content.split(/\s+/).filter(word => word.length > 0).length
       };
 
-      const response = await enhancedIntelligentResponseGenerator.generateRealTimeTip(
+      const response = await EnhancedNarrativeCoach.generateRealTimeTip(
         coachingContext
       );
 
@@ -228,7 +227,7 @@ export function EnhancedTabbedCoachPanel({
       };
 
       // Generate response using enhanced generator
-      const response = await enhancedIntelligentResponseGenerator.generateResponse(
+      const response = await EnhancedNarrativeCoach.generateResponse(
         inputMessage,
         coachingContext
       );
