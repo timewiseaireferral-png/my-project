@@ -86,7 +86,7 @@ interface EnhancedWritingLayoutNSWProps {
 }
 
 export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
-  console.log("EnhancedWritingLayoutNSW Props:", props);
+  // console.log("EnhancedWritingLayoutNSW Props:", props);
   const { theme, toggleTheme } = useTheme();
   const darkMode = theme === 'dark';
 
@@ -255,7 +255,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Get effective prompt
   const effectivePrompt = generatedPrompt || customPromptInput || initialPrompt;
-  console.log("EnhancedWritingLayoutNSW State:", { generatedPrompt, customPromptInput, localContent, effectivePrompt, showPromptOptionsModal, hidePrompt, popupFlowCompleted });
+ //  console.log("EnhancedWritingLayoutNSW State:", { generatedPrompt, customPromptInput, localContent, effectivePrompt, showPromptOptionsModal, hidePrompt, popupFlowCompleted });
 
   // Initialize content
   useEffect(() => {
