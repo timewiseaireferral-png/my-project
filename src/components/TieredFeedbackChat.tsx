@@ -62,12 +62,6 @@ export const TieredFeedbackChat: React.FC<TieredFeedbackChatProps> = ({
   }, [user]);
 
   useEffect(() => {
-    if (preferences) {
-      addWelcomeMessage();
-    }
-  }, [preferences]);
-
-  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
@@ -80,29 +74,6 @@ export const TieredFeedbackChat: React.FC<TieredFeedbackChatProps> = ({
     } catch (err) {
       console.error('Error loading preferences:', err);
     }
-  };
-
-  const addWelcomeMessage = () => {
-    if (messages.length > 0) return; // Prevent re-adding on every preference update
-    const welcomeMessages: Record<SupportLevel, string> = {
-      'High Support':
-        "Hi there! 👋 I'm your Writing Mate! I'm here to help you write an amazing story. Ask me anything, and I'll guide you step by step! 🌟",
-      'Medium Support':
-        "Hello! 😊 I'm your AI Writing Mate. I'm here to help you improve your writing with suggestions and examples. What would you like to work on?",
-      'Low Support':
-        "Welcome! I'm your writing coach. Feel free to ask about any aspect of your writing, and I'll provide thoughtful guidance to help you refine your work.",
-    };
-
-    const level = preferences?.support_level || 'Medium Support';
-    setMessages([
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content: welcomeMessages[level],
-        timestamp: new Date(),
-        supportLevel: level,
-      },
-    ]);
   };
 
   const scrollToBottom = () => {
@@ -279,7 +250,7 @@ export const TieredFeedbackChat: React.FC<TieredFeedbackChatProps> = ({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px] max-h-[500px]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px] max-h-[500px]'>
         {messages.length === 0 && (
           <div className="text-center py-8">
             <Lightbulb className="w-12 h-12 text-gray-300 mx-auto mb-3" />
