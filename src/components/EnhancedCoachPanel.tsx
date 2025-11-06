@@ -7,10 +7,10 @@ import { enhancedIntelligentResponseGenerator, EnhancedCoachingContext } from '.
 
 // Assuming these components exist in your project structure based on our previous analysis
 import { GrammarCorrectionPanel } from './GrammarCorrectionPanel';
-import SentenceStructurePanel from './SentenceStructurePanel';
+import { SentenceStructurePanel } from './SentenceStructurePanel';
 import { WritingIssuesPanel } from './WritingIssuesPanel';
-import VocabularyEnhancementPanel from './VocabularyEnhancementPanel';
-import RubricPanel from './RubricPanel';
+import { VocabularyEnhancementPanel } from './VocabularyEnhancementPanel';
+import { RubricPanel } from './RubricPanel';
 
 
 interface ChatMessage {
@@ -442,9 +442,9 @@ export function EnhancedCoachPanel({
         )}
 
         {activeTab === 'structure' && <SentenceStructurePanel content={content} />}
-        {activeTab === 'language' && <VocabularyEnhancementPanel content={content} />}
+        {activeTab === 'language' && <VocabularyEnhancementPanel text={content} />}
         {activeTab === 'grammar' && <GrammarCorrectionPanel analysis={analysis} onApplyFix={onApplyFix} />}
-        {active-tab === 'toolkit' && <RubricPanel />}
+        {activeTab === 'toolkit' && <RubricPanel />}
       </div>
     </div>
   );
