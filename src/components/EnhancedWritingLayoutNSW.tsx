@@ -28,7 +28,6 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
-  Target,
   Info,
   Clock,
   FileText,
