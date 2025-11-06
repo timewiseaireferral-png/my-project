@@ -211,4 +211,4 @@ const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
   );
 };
 
-export default GrammarCorrectionPanel;
+export { GrammarCorrectionPanel };
