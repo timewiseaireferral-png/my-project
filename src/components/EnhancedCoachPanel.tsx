@@ -444,7 +444,8 @@ export const EnhancedCoachPanel = ({
         if (onAnalysisUpdate) {
           onAnalysisUpdate(newAnalysis);
         }
-        setIsAnalyzing(false);
+        setIsLoading(false);
+        setAnalysisStatus('success');
       }, 1000); // Debounce time for analysis
       return () => clearTimeout(timer);
     } else if (content.trim().length <= 10) {
