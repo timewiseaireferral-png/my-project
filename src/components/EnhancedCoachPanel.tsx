@@ -5,11 +5,11 @@ import { analyzeContext } from '../lib/contextualAwareness';
 import { enhancedIntelligentResponseGenerator, EnhancedCoachingContext } from '../lib/enhancedIntelligentResponseGenerator';
 
 // Assuming these components exist in your project structure based on our previous analysis
-import GrammarCorrectionPanel from './GrammarCorrectionPanel';
-import SentenceStructurePanel from './SentenceStructurePanel';
-import WritingIssuesPanel from './WritingIssuesPanel';
-import VocabularyEnhancementPanel from './VocabularyEnhancementPanel';
-import RubricPanel from './RubricPanel';
+import { GrammarCorrectionPanel } from './GrammarCorrectionPanel';
+import { SentenceStructurePanel } from './SentenceStructurePanel';
+import { WritingIssuesPanel } from './WritingIssuesPanel';
+import { VocabularyEnhancementPanel } from './VocabularyEnhancementPanel';
+import { RubricPanel } from './RubricPanel';
 
 
 interface ChatMessage {
