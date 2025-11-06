@@ -108,9 +108,6 @@ export class EnhancedNarrativeCoach {
     };
   }
 
-  private static getAdvancedGuidance(content: string, prompt?: string): EnhancedCoachResponse {
-  }
-
   private static getWelcomeMessage(prompt?: string): EnhancedCoachResponse {
     return {
       encouragement: "Welcome! Let's write an amazing narrative together! ✨",
@@ -412,7 +409,7 @@ export class EnhancedNarrativeCoach {
 /**
  * Generate intelligent response based on text type
  */
-export function generateIntelligentResponse(
+export function enhancedIntelligentResponseGenerator(
   content: string,
   textType: string,
   prompt?: string
