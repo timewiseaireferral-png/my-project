@@ -1,3 +1,90 @@
+import { OpenAI } from 'openai';
+
+// --- Mock/Placeholder for missing functions (assuming they are in other files) ---
+// In a real scenario, these would be imported from their respective files.
+// We are adding them here to make the function runnable and prevent the 502 error.
+function getEnhancedFallbackResponse(userMessage, currentContent, wordCount, textType) {
+    // A simple, safe fallback response
+    return "I'm sorry, the AI service is currently unavailable. Please try again later. (Fallback)";
+}
+
+function getBaseContext(currentContent, wordCount, textType) {
+    // A simple context string for the prompt
+    return `Current Writing Context:
+- Text Type: ${textType}
+- Word Count: ${wordCount}
+- Content Snippet: "${currentContent.substring(0, 100)}..."`;
+}
+// --- End of Mock/Placeholder ---
+
+const client = new OpenAI();
+
+const headers = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+};
+
+exports.handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: 'OK',
+    };
+  }
+
+  try {
+    if (!event.body) {
+      throw new Error("Request body is missing.");
+    }
+    
+    const { userMessage, currentContent, wordCount, textType, supportLevel } = JSON.parse(event.body);
+
+    // Check for missing parameters and provide a clean 400 error
+    if (!userMessage || !currentContent || !textType || !supportLevel) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: "Missing required parameters: userMessage, currentContent, wordCount, textType, supportLevel" })
+        };
+    }
+
+    const getTieredSystemPrompt = () => {
+      const baseContext = getBaseContext(currentContent, wordCount, textType);
+
+      if (supportLevel === 'high') {
+        // High Support
+        return `You are a highly supportive and encouraging AI Writing Buddy for 10-12 year old students preparing for the NSW Selective Writing Test. You provide HIGH SUPPORT with clear, direct guidance.
+
+PERSONALITY & TONE:
+- Extremely encouraging and positive 😊
+- Use emojis frequently
+- Speak like a friendly tutor
+- Give direct answers and clear steps
+- Focus on building confidence
+
+HIGH SUPPORT FEATURES:
+1. DIRECT ANSWERS - Give clear, concise solutions
+2. SIMPLE EXAMPLES - Easy-to-understand demonstrations
+3. GRAMMAR & SPELLING FIXES - Focus on correctness
+4. BASIC STRUCTURE GUIDANCE - PEEEL, Story Mountain
+5. VOCABULARY DEFINITIONS - Explain complex words
+6. SHORT, ACTIONABLE STEPS - Keep it simple
+
+${baseContext}
+
+RESPONSE FORMAT:
+1. Enthusiastic greeting (1 sentence)
+2. Direct answer to their question
+3. Simple, clear example
+4. One easy, actionable next step (4-6 sentences total)
+
+FOCUS: Clarity and confidence building.`;
+      } else if (supportLevel === 'low') {
+        // Low Support
+        return `You are a challenging and sophisticated AI Writing Coach for advanced 10-12 year old students preparing for the NSW Selective Writing Test. You provide LOW SUPPORT, focusing on critical thinking and refinement.
+
 PERSONALITY & TONE:
 - Intellectually challenging and respectful of their abilities
 - Use minimal emojis (if at all)
@@ -107,9 +194,10 @@ Please provide a helpful, encouraging response that addresses their specific que
     
     // Return a safe fallback response
     return {
-      statusCode: 200,
+      statusCode: 500, // Changed to 500 to reflect a server error, not a successful fallback
       headers,
       body: JSON.stringify({ 
+        error: "Internal Server Error: Could not process request.",
         response: "I'm having trouble right now, but I'm here to help! Can you try asking your question again? 😊" 
       })
     };
