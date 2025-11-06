@@ -41,7 +41,8 @@ import {
   X,
   Sparkles,
   Moon,
-  Sun
+  Sun,
+  Target
 } from 'lucide-react';
 interface EnhancedWritingLayoutNSWProps {
   content: string;
