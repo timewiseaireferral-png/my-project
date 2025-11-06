@@ -58,9 +58,14 @@ export const TieredFeedbackChat: React.FC<TieredFeedbackChatProps> = ({
   useEffect(() => {
     if (user) {
       loadPreferences();
-      addWelcomeMessage();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (preferences) {
+      addWelcomeMessage();
+    }
+  }, [preferences]);
 
   useEffect(() => {
     scrollToBottom();
@@ -78,6 +83,7 @@ export const TieredFeedbackChat: React.FC<TieredFeedbackChatProps> = ({
   };
 
   const addWelcomeMessage = () => {
+    if (messages.length > 0) return; // Prevent re-adding on every preference update
     const welcomeMessages: Record<SupportLevel, string> = {
       'High Support':
         "Hi there! 👋 I'm your Writing Mate! I'm here to help you write an amazing story. Ask me anything, and I'll guide you step by step! 🌟",
