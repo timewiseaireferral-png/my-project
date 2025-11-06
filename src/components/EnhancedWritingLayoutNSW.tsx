@@ -43,7 +43,6 @@ import {
   Moon,
   Sun
 } from 'lucide-react';
-
 interface EnhancedWritingLayoutNSWProps {
   content: string;
   onChange: (content: string) => void;
