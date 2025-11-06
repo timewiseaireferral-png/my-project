@@ -59,6 +59,11 @@ export const TieredFeedbackChat: React.FC<TieredFeedbackChatProps> = ({
     if (user) {
       loadPreferences();
     }
+    // Load previous session messages if available
+    const storedMessages = ChatSessionService.loadSession(sessionId);
+    if (storedMessages.length > 0) {
+      setMessages(storedMessages);
+    }
   }, [user]);
 
   useEffect(() => {
