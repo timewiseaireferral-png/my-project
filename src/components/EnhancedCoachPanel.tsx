@@ -8,7 +8,7 @@ import { enhancedIntelligentResponseGenerator, EnhancedCoachingContext } from '.
 // Assuming these components exist in your project structure based on our previous analysis
 import { GrammarCorrectionPanel } from './GrammarCorrectionPanel';
 import SentenceStructurePanel from './SentenceStructurePanel';
-import WritingIssuesPanel from './WritingIssuesPanel';
+import { WritingIssuesPanel } from './WritingIssuesPanel';
 import VocabularyEnhancementPanel from './VocabularyEnhancementPanel';
 import RubricPanel from './RubricPanel';
 
@@ -411,11 +411,15 @@ export function EnhancedCoachPanel({
                   disabled={!inputMessage.trim() || isLoading}
                   className={`p-3 rounded-lg transition-colors ${
                     !inputMessage.trim() || isLoading
-                      ? 'bg-gray-300 text-gray-500 dark:bg-slate-600 dark:text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                      ? 'bg-gray-300 dark:bg-slate-600 cursor-not-allowed'
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
                   }`}
                 >
-                  <Send className="w-5 h-5" />
+                  {isLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -423,73 +427,24 @@ export function EnhancedCoachPanel({
         )}
 
         {activeTab === 'ideas' && (
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Idea Generation & Development</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Use these tools to brainstorm, develop characters, and explore setting ideas.
-            </p>
-            <div className="grid grid-cols-1 gap-3">
-              <WritingIssuesPanel content={content} />
-              <VocabularyEnhancementPanel content={content} />
-            </div>
+          <div>
+            <h3 className="font-bold mb-2">Dynamic Examples</h3>
+            {dynamicExamples.length > 0 ? (
+              <ul className="space-y-2">
+                {dynamicExamples.map((example, index) => (
+                  <li key={index} className="p-2 bg-gray-100 rounded-md text-sm">{example}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-gray-500">Start writing to see dynamic examples and ideas here.</p>
+            )}
           </div>
         )}
 
-        {activeTab === 'structure' && (
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Structure & Planning</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Check your story's flow, pacing, and overall structure against the required text type.
-            </p>
-            <div className="grid grid-cols-1 gap-3">
-              <SentenceStructurePanel content={content} />
-              {/* Add other structure components here */}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'language' && (
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Language & Style</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Focus on figurative language, descriptive writing, and sophisticated vocabulary.
-            </p>
-            <div className="grid grid-cols-1 gap-3">
-              {/* Display dynamic examples here */}
-              {dynamicExamples.length > 0 && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-                  <h5 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">Dynamic Language Suggestions</h5>
-                  <ul className="list-disc list-inside text-sm text-yellow-700 dark:text-yellow-400 space-y-1">
-                    {dynamicExamples.map((example, index) => (
-                      <li key={index}>{example}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {/* Add other language components here */}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'grammar' && (
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Grammar & Conventions</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Review and correct errors in grammar, spelling, and punctuation.
-            </p>
-            <GrammarCorrectionPanel text={content} />
-          </div>
-        )}
-
-        {activeTab === 'toolkit' && (
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">NSW Rubric Tracker</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Track your progress against the official NSW Selective School writing criteria.
-            </p>
-            <RubricPanel textType={textType} content={content} />
-          </div>
-        )}
+        {activeTab === 'structure' && <SentenceStructurePanel content={content} />}
+        {activeTab === 'language' && <VocabularyEnhancementPanel content={content} />}
+        {activeTab === 'grammar' && <GrammarCorrectionPanel analysis={analysis} onApplyFix={onApplyFix} />}
+        {active-tab === 'toolkit' && <RubricPanel />}
       </div>
     </div>
   );
