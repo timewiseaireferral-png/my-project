@@ -307,6 +307,10 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     console.log('🔄 Auto-fetching AI analysis for Writing Mate tabs...');
     // The debounce is now handled by `debouncedLocalContent`
     const fetchAnalysis = async () => {
+      if (onAnalysisChange) {
+        onAnalysisChange(null); // Clear previous analysis
+      }
+      setIsLoading(true); // Start loading
       try {
         const feedbackResponse = await fetch("/api/ai-feedback", { 
           
@@ -331,6 +335,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
       } catch (error) {
         console.error('❌ Error fetching AI analysis:', error);
+      } finally {
+        setIsLoading(false); // Stop loading
       }
     };
 
