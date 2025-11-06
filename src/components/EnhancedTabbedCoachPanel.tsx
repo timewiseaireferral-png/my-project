@@ -36,7 +36,8 @@ export function EnhancedTabbedCoachPanel({
   content,
   textType = 'narrative',
   timeElapsed = 0,
-  ...props
+  currentWordCount, // Destructure currentWordCount directly
+  ...props // Keep other props if needed, but currentWordCount is now separate
 }: EnhancedTabbedCoachPanelProps) {
   const [activeTab, setActiveTab] = useState('coach');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -305,8 +306,7 @@ export function EnhancedTabbedCoachPanel({
     }
   };
 
-  // Use the currentWordCount prop passed from the parent
-  const { currentWordCount } = props;
+  // currentWordCount is now destructured directly in the function arguments
   const progress = Math.min((currentWordCount / 400) * 100, 100);
   const completionPercentage = Math.floor(progress);
 
