@@ -533,7 +533,7 @@ function AppContent() {
           } />
           <Route path="/writing" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
-              {prompt ? (
+              <>
                 <EnhancedWritingLayoutNSW
                   content={content}
                   onChange={setContent}
@@ -569,11 +569,7 @@ function AppContent() {
                   panelVisible={panelVisible}
                   setPanelVisible={setPanelVisible}
                 />
-              ) : (
-                <div className="flex-1 flex items-center justify-center text-gray-500">
-                  Please go back to the Dashboard to select a writing prompt.
-                </div>
-              )}
+</>
             </WritingAccessCheck>
           } />
           <Route path="/learning" element={
