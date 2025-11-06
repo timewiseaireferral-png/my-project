@@ -46,7 +46,7 @@ exports.handler = async (event) => {
         return {
             statusCode: 400,
             headers,
-            body: JSON.stringify({ error: "Missing required parameters: userMessage, currentContent, wordCount, textType, supportLevel" })
+            body: JSON.stringify({ error: "Missing required parameters: userMessage, currentContent, textType, supportLevel" })
         };
     }
 
