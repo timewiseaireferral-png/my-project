@@ -6,7 +6,7 @@ import { enhancedIntelligentResponseGenerator, EnhancedCoachingContext } from '.
 
 
 // Assuming these components exist in your project structure based on our previous analysis
-import { GrammarCorrectionPanel } from './GrammarCorrectionPanel';
+import GrammarCorrectionPanel from './GrammarCorrectionPanel';
 import { SentenceStructurePanel } from './SentenceStructurePanel';
 import { WritingIssuesPanel } from './WritingIssuesPanel';
 import { VocabularyEnhancementPanel } from './VocabularyEnhancementPanel';
