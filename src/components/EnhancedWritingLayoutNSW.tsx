@@ -747,7 +747,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               }`}
               title="Exam Mode"
             >
-              <Target className="w-4 h-4" />
               <span>Exam</span>
             </button>
           </div>
