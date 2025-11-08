@@ -86,7 +86,6 @@ interface EnhancedWritingLayoutNSWProps {
 }
 
 export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
-  console.log("EnhancedWritingLayoutNSW Props:", props);
   const { theme, toggleTheme } = useTheme();
   const darkMode = theme === 'dark';
 
@@ -170,6 +169,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previousContentRef = useRef<string>(content);
+  const onChangeRef = useRef(onChange);
 
 
   // Prompt starts expanded - will auto-collapse after 5 minutes (handled by timer above)
@@ -242,7 +243,15 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Get effective prompt
   const effectivePrompt = generatedPrompt || customPromptInput || initialPrompt;
-  console.log("EnhancedWritingLayoutNSW State:", { generatedPrompt, customPromptInput, localContent, effectivePrompt, showPromptOptionsModal, hidePrompt, popupFlowCompleted });
+
+  // Keep refs updated
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    previousContentRef.current = content;
+  }, [content]);
 
   // Initialize content only once on mount
   useEffect(() => {
@@ -254,16 +263,17 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   // Auto-save content changes (debounced)
   useEffect(() => {
     // Avoid infinite loop by checking if content actually changed
-    if (localContent === content) return;
+    if (localContent === previousContentRef.current) return;
+    if (!localContent && !previousContentRef.current) return;
 
     const timer = setTimeout(() => {
-      if (onChange) {
-        onChange(localContent);
+      if (onChangeRef.current && localContent !== previousContentRef.current) {
+        onChangeRef.current(localContent);
         setLastSaved(new Date());
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [localContent]); // Only depend on localContent, not content or onChange
+  }, [localContent]); // Only depend on localContent
 
   // Update word count (debounced to prevent loops)
   useEffect(() => {
