@@ -355,6 +355,9 @@ export function generateDynamicExamples(
   writingType: string,
   currentWordCount: number
 ): DynamicExample[] {
+  if (!writingType || typeof writingType !== 'string') {
+    return generateNarrativeExamples(prompt, currentWordCount);
+  }
   const normalizedType = writingType.toLowerCase();
 
   if (normalizedType.includes('narrative')) {
