@@ -28,6 +28,7 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
+  Target,
   Info,
   Clock,
   FileText,
@@ -41,9 +42,9 @@ import {
   X,
   Sparkles,
   Moon,
-  Sun,
-  Target
+  Sun
 } from 'lucide-react';
+
 interface EnhancedWritingLayoutNSWProps {
   content: string;
   onChange: (content: string) => void;
@@ -85,7 +86,7 @@ interface EnhancedWritingLayoutNSWProps {
 }
 
 export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
-  // console.log("EnhancedWritingLayoutNSW Props:", props);
+  console.log("EnhancedWritingLayoutNSW Props:", props);
   const { theme, toggleTheme } = useTheme();
   const darkMode = theme === 'dark';
 
@@ -254,7 +255,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Get effective prompt
   const effectivePrompt = generatedPrompt || customPromptInput || initialPrompt;
- //  console.log("EnhancedWritingLayoutNSW State:", { generatedPrompt, customPromptInput, localContent, effectivePrompt, showPromptOptionsModal, hidePrompt, popupFlowCompleted });
+  console.log("EnhancedWritingLayoutNSW State:", { generatedPrompt, customPromptInput, localContent, effectivePrompt, showPromptOptionsModal, hidePrompt, popupFlowCompleted });
 
   // Initialize content
   useEffect(() => {
@@ -306,10 +307,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     console.log('🔄 Auto-fetching AI analysis for Writing Mate tabs...');
     // The debounce is now handled by `debouncedLocalContent`
     const fetchAnalysis = async () => {
-      if (onAnalysisChange) {
-        onAnalysisChange(null); // Clear previous analysis
-      }
-      setIsLoading(true); // Start loading
       try {
         const feedbackResponse = await fetch("/api/ai-feedback", { 
           
@@ -334,8 +331,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
       } catch (error) {
         console.error('❌ Error fetching AI analysis:', error);
-      } finally {
-        setIsLoading(false); // Stop loading
       }
     };
 
@@ -748,6 +743,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               }`}
               title="Exam Mode"
             >
+              <Target className="w-4 h-4" />
               <span>Exam</span>
             </button>
           </div>
