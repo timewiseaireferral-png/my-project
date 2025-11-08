@@ -66,6 +66,9 @@ export const TEXT_TYPE_PROMPTS: TextTypePrompts = {
  * Get a random prompt for a specific text type
  */
 export function getRandomPromptForTextType(textType: string): string {
+  if (!textType || typeof textType !== 'string') {
+    return getDefaultPromptForTextType('narrative');
+  }
   const normalizedType = textType.toLowerCase() as keyof TextTypePrompts;
   const prompts = TEXT_TYPE_PROMPTS[normalizedType];
   
@@ -81,6 +84,9 @@ export function getRandomPromptForTextType(textType: string): string {
  * Get a default fallback prompt for any text type
  */
 export function getDefaultPromptForTextType(textType: string): string {
+  if (!textType || typeof textType !== 'string') {
+    textType = 'narrative';
+  }
   const normalizedType = textType.toLowerCase();
   
   switch (normalizedType) {
