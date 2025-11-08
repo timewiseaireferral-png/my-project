@@ -12,7 +12,8 @@ import { generateDynamicExamples, formatExamplesForDisplay } from '../lib/dynami
 import { ChatSessionService } from '../lib/chatSessionService';
 import { NSW_MARKING_CRITERIA, generateScoringGuidance, mapToNSWScores, getImprovementExamples } from '../lib/nswMarkingCriteria';
 import { NSWCriteriaCompact, NSWCriteriaDisplay } from './NSWCriteriaDisplay';
-import { WRITING_MATE_SIDEBAR_CONTENT } from '../lib/textTypeContent'; // <-- NEW IMPORT
+import * as DynamicAIService from '../services/dynamicAICoachService';
+import { AI_COACH_CONFIG, shouldEnableFeature } from '../config/aiCoachConfig';
 
 /**
  * Generates time-appropriate coaching messages for 40-minute writing test
@@ -381,7 +382,7 @@ class NSWCriteriaAnalyzer {
 export const EnhancedCoachPanel = ({
   textType,
   content,
-  writingPrompt,
+  writingPrompt: prompt,
   wordCount,
   analysis,
   user,
@@ -390,6 +391,7 @@ export const EnhancedCoachPanel = ({
   openAILoading,
   onAnalysisUpdate,
   onApplyFix,
+  onChange,
   selectedText,
   isFocusMode,
 }) => {
@@ -405,17 +407,13 @@ export const EnhancedCoachPanel = ({
   const responseStartTime = useRef(null);
   const [sessionId, setSessionId] = useState(null);
   const [messageCount, setMessageCount] = useState(0);
-  const [dynamicExamples, setDynamicExamples] = useState(null);
-
-  // NEW: Get dynamic sidebar content based on textType
-  const sidebarContent = useMemo(() => {
-    // Ensure textType is a valid string before using it
-    if (!textType || typeof textType !== 'string') {
-      return WRITING_MATE_SIDEBAR_CONTENT.default;
-    }
-    const normalizedType = textType.toLowerCase().trim();
-    return WRITING_MATE_SIDEBAR_CONTENT[normalizedType as keyof typeof WRITING_MATE_SIDEBAR_CONTENT] || WRITING_MATE_SIDEBAR_CONTENT.default;
-  }, [textType]);
+  const [dynamicExamples, setDynamicExamples] = useState<any[]>([]);
+  const [dynamicVocabulary, setDynamicVocabulary] = useState<any[]>([]);
+  const [dynamicSuggestion, setDynamicSuggestion] = useState<any>(null);
+  const [dynamicQuickQuestions, setDynamicQuickQuestions] = useState<string[]>([]);
+  const [isLoadingExamples, setIsLoadingExamples] = useState(false);
+  const [isLoadingVocabulary, setIsLoadingVocabulary] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
@@ -472,18 +470,95 @@ export const EnhancedCoachPanel = ({
     }
   }, [content, textType, isLoadingResponse]);
 
-  // Simulate dynamic example generation
+  // Generate dynamic examples based on prompt and content
   useEffect(() => {
-    if (comprehensiveFeedback) {
-      const timer = setTimeout(() => {
-        const examples = generateDynamicExamples(textType, comprehensiveFeedback);
-        setDynamicExamples(examples);
-      }, 500);
-      return () => clearTimeout(timer);
-    } else {
-      setDynamicExamples(null);
+    const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
+
+    if (!shouldEnableFeature('examples', wordCount) || !prompt) {
+      setDynamicExamples([]);
+      return;
     }
-  }, [comprehensiveFeedback, textType]);
+
+    setIsLoadingExamples(true);
+    const timer = setTimeout(async () => {
+      try {
+        const examples = await DynamicAIService.generateDynamicExamples({
+          writingPrompt: prompt,
+          currentContent: content,
+          textType: textType || 'narrative',
+          wordCount,
+          userId: user?.id
+        });
+        setDynamicExamples(examples);
+      } catch (error) {
+        console.error('Failed to generate examples:', error);
+        setDynamicExamples([]);
+      } finally {
+        setIsLoadingExamples(false);
+      }
+    }, AI_COACH_CONFIG.debounce.examples);
+
+    return () => clearTimeout(timer);
+  }, [content, prompt, textType, user?.id]);
+
+  // Generate dynamic vocabulary based on prompt and content
+  useEffect(() => {
+    const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
+
+    if (!shouldEnableFeature('vocabulary', wordCount) || !prompt) {
+      setDynamicVocabulary([]);
+      return;
+    }
+
+    setIsLoadingVocabulary(true);
+    const timer = setTimeout(async () => {
+      try {
+        const vocabulary = await DynamicAIService.generateDynamicVocabulary({
+          writingPrompt: prompt,
+          currentContent: content,
+          textType: textType || 'narrative',
+          wordCount,
+          userId: user?.id
+        });
+        setDynamicVocabulary(vocabulary);
+      } catch (error) {
+        console.error('Failed to generate vocabulary:', error);
+        setDynamicVocabulary([]);
+      } finally {
+        setIsLoadingVocabulary(false);
+      }
+    }, AI_COACH_CONFIG.debounce.vocabulary);
+
+    return () => clearTimeout(timer);
+  }, [content, prompt, textType, user?.id]);
+
+  // Generate dynamic quick questions
+  useEffect(() => {
+    const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
+
+    if (!prompt) {
+      setDynamicQuickQuestions([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const questions = await DynamicAIService.generateQuickQuestions({
+          writingPrompt: prompt,
+          currentContent: content,
+          textType: textType || 'narrative',
+          wordCount,
+          userId: user?.id
+        });
+        setDynamicQuickQuestions(questions);
+      } catch (error) {
+        console.error('Failed to generate quick questions:', error);
+        setDynamicQuickQuestions([]);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [content, prompt, textType, user?.id]);
 
   const handleSendMessage = async (quickMessage?: string) => {
     const messageToSend = quickMessage || inputMessage.trim();
@@ -801,42 +876,18 @@ export const EnhancedCoachPanel = ({
                 </button>
                 {isQuickQueriesOpen && (
                   <div className="grid grid-cols-2 gap-2 p-2 border rounded-lg shadow-inner bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700">
-                    <button
-                      onClick={() => {
-                        handleSendMessage("How can I improve my opening?");
-                        setIsQuickQueriesOpen(false);
-                      }}
-                      className="text-left p-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-300 transition-colors"
-                    >
-                      ✨ Improve opening
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleSendMessage("What vocabulary can I use?");
-                        setIsQuickQueriesOpen(false);
-                      }}
-                      className="text-left p-2 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded text-xs text-purple-800 dark:text-purple-300 transition-colors"
-                    >
-                      📚 Better words
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleSendMessage("How do I add more detail?");
-                        setIsQuickQueriesOpen(false);
-                      }}
-                      className="text-left p-2 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 border border-green-200 dark:border-green-800 rounded text-xs text-green-800 dark:text-green-300 transition-colors"
-                    >
-                      🎨 Add detail
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleSendMessage("What should I write next?");
-                        setIsQuickQueriesOpen(false);
-                      }}
-                      className="text-left p-2 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded text-xs text-orange-800 dark:text-orange-300 transition-colors"
-                    >
-                      🎯 What's next?
-                    </button>
+                    {(dynamicQuickQuestions.length > 0 ? dynamicQuickQuestions : AI_COACH_CONFIG.quickQuestionsFallback.hasContent).map((question, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          handleSendMessage(question);
+                          setIsQuickQueriesOpen(false);
+                        }}
+                        className="text-left p-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-300 transition-colors"
+                      >
+                        {question}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -1337,34 +1388,46 @@ export const EnhancedCoachPanel = ({
           </>
         ) : currentView === 'examples' ? (
           <div className="p-3 overflow-y-auto h-full">
-            <h3 className="text-lg font-bold mb-3 text-gray-900 dark:text-white">Dynamic Examples</h3>
+            <h3 className="text-lg font-bold mb-3 text-gray-900 dark:text-white flex items-center justify-between">
+              <span>Dynamic Examples</span>
+              {isLoadingExamples && <Loader2 className="w-5 h-5 animate-spin text-blue-500" />}
+            </h3>
             <div className="space-y-4">
-              {dynamicExamples && dynamicExamples.length > 0 ? (
+              {isLoadingExamples ? (
+                <div className="p-6 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-3" />
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">{AI_COACH_CONFIG.messages.loading.examples}</p>
+                </div>
+              ) : dynamicExamples && dynamicExamples.length > 0 ? (
                 dynamicExamples.map((example, index) => (
                   <div key={index} className="p-4 bg-white dark:bg-slate-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-semibold text-blue-600 dark:text-blue-400 mb-2">{example.title}</h4>
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-semibold text-blue-600 dark:text-blue-400">{example.title}</h4>
+                      <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">{example.category}</span>
+                    </div>
                     <div className="text-sm space-y-2">
-                      <p className="text-gray-700 dark:text-gray-300">
-                        <span className="font-medium text-red-600">❌ Before:</span> {example.before}
-                      </p>
-                      <p className="text-gray-700 dark:text-gray-300">
-                        <span className="font-medium text-green-600">✅ After:</span> {example.after}
-                      </p>
-                      <p className="text-xs italic text-gray-500 dark:text-gray-400">
-                        💡 {example.explanation}
+                      <div className="bg-gray-50 dark:bg-slate-900 p-3 rounded border border-gray-200 dark:border-gray-600">
+                        <p className="text-gray-700 dark:text-gray-300 font-mono">{example.content}</p>
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        <strong>Why this helps:</strong> {example.explanation}
                       </p>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Start writing to generate dynamic examples based on your content!</p>
+                <div className="p-6 text-center">
+                  <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">{AI_COACH_CONFIG.messages.empty.examples}</p>
+                </div>
               )}
             </div>
           </div>
         ) : currentView === 'builder' ? (
           <StepByStepWritingBuilder
             textType={textType}
-            darkMode={darkMode}
+            content={content}
+            onContentChange={onChange}
           />
         ) : currentView === 'detailed' ? (
           comprehensiveFeedback ? (
@@ -1398,11 +1461,44 @@ export const EnhancedCoachPanel = ({
             onApplyCorrection={onApplyFix}
           />
         ) : currentView === 'vocabulary' ? (
-          <VocabularyEnhancementPanel
-            content={content}
-            darkMode={darkMode}
-            selectedText={selectedText}
-          />
+          <div className="p-3 overflow-y-auto h-full">
+            <h3 className="text-lg font-bold mb-3 text-gray-900 dark:text-white flex items-center justify-between">
+              <span>Power Vocabulary</span>
+              {isLoadingVocabulary && <Loader2 className="w-5 h-5 animate-spin text-pink-500" />}
+            </h3>
+            <div className="space-y-3">
+              {isLoadingVocabulary ? (
+                <div className="p-6 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-pink-500 mx-auto mb-3" />
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">{AI_COACH_CONFIG.messages.loading.vocabulary}</p>
+                </div>
+              ) : dynamicVocabulary && dynamicVocabulary.length > 0 ? (
+                dynamicVocabulary.map((vocab, index) => (
+                  <div key={index} className="p-4 bg-white dark:bg-slate-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-bold text-lg text-pink-600 dark:text-pink-400">{vocab.word}</h4>
+                      <Sparkles className="w-5 h-5 text-pink-500" />
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{vocab.definition}</p>
+                    <div className="bg-pink-50 dark:bg-pink-900/20 p-3 rounded border border-pink-200 dark:border-pink-800 mb-2">
+                      <p className="text-xs font-medium text-pink-800 dark:text-pink-300 mb-1">Example:</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 italic">"{vocab.example}"</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-200 dark:border-blue-800">
+                      <p className="text-xs text-blue-800 dark:text-blue-300">
+                        <strong>💡 Use it here:</strong> {vocab.contextRelevance}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center">
+                  <Sparkles className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">{AI_COACH_CONFIG.messages.empty.vocabulary}</p>
+                </div>
+              )}
+            </div>
+          </div>
         ) : currentView === 'sentences' ? (
           <SentenceStructurePanel
             content={content}
