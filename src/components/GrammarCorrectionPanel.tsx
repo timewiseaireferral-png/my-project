@@ -15,7 +15,7 @@ interface GrammarCorrectionPanelProps {
   onApplyCorrection?: (start: number, end: number, correction: string) => void;
 }
 
-const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
+export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
   text,
   aiCorrections,
   onApplyCorrection
@@ -210,5 +210,3 @@ const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
     </div>
   );
 };
-
-export { GrammarCorrectionPanel };
