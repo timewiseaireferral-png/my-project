@@ -99,6 +99,14 @@ export interface ComprehensiveFeedback {
 
 export class ComprehensiveFeedbackAnalyzer {
 
+  /**
+   * Main analyze method - shorthand for generateComprehensiveFeedback
+   */
+  static analyze(text: string, analysis?: any, textType?: string): ComprehensiveFeedback {
+    const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+    return this.generateComprehensiveFeedback(text, wordCount, textType || 'narrative');
+  }
+
   static analyzeGrammar(text: string): GrammarIssue[] {
     const issues: GrammarIssue[] = [];
 
