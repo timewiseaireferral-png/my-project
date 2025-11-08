@@ -244,32 +244,40 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const effectivePrompt = generatedPrompt || customPromptInput || initialPrompt;
   console.log("EnhancedWritingLayoutNSW State:", { generatedPrompt, customPromptInput, localContent, effectivePrompt, showPromptOptionsModal, hidePrompt, popupFlowCompleted });
 
-  // Initialize content
+  // Initialize content only once on mount
   useEffect(() => {
-    if (content !== undefined) {
+    if (content !== undefined && localContent === '') {
       setLocalContent(content);
     }
-  }, [content]);
+  }, []); // Empty dependency array - only run once on mount
 
-  // Auto-save content changes
+  // Auto-save content changes (debounced)
   useEffect(() => {
+    // Avoid infinite loop by checking if content actually changed
+    if (localContent === content) return;
+
     const timer = setTimeout(() => {
-      if (localContent !== content && onChange) {
+      if (onChange) {
         onChange(localContent);
         setLastSaved(new Date());
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [localContent, content, onChange]);
+  }, [localContent]); // Only depend on localContent, not content or onChange
 
-  // Update word count
+  // Update word count (debounced to prevent loops)
   useEffect(() => {
     const words = localContent.trim().split(/\s+/).filter(word => word.length > 0);
     const newWordCount = words.length;
+
+    // Only update if word count actually changed
     if (newWordCount !== wordCount && onWordCountChange) {
-      onWordCountChange(newWordCount);
+      const timer = setTimeout(() => {
+        onWordCountChange(newWordCount);
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [localContent, wordCount, onWordCountChange]);
+  }, [localContent]); // Only depend on localContent
 
   // Show prompt modal if no prompt exists
   useEffect(() => {
