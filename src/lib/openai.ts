@@ -220,7 +220,8 @@ function getFallbackPrompt(textType: string, topic?: string): string {
     ]
   };
 
-  const typePrompts = fallbackPrompts[textType.toLowerCase()] || fallbackPrompts.narrative;
+  const normalizedType = (textType && typeof textType === 'string') ? textType.toLowerCase() : 'narrative';
+  const typePrompts = fallbackPrompts[normalizedType] || fallbackPrompts.narrative;
   const randomPrompt = typePrompts[Math.floor(Math.random() * typePrompts.length)];
   return topic ? `${randomPrompt} (Focus on: ${topic})` : randomPrompt;
 }
@@ -345,7 +346,8 @@ function getFallbackStructure(textType: string): string {
     descriptive: `Descriptive Structure:\n• Introduction: Set the scene\n• Body: Sensory details\n• Conclusion: Lasting impression`,
     creative: `Creative Structure:\n• Hook: Intriguing start\n• Development: Build concept\n• Climax: Key moment\n• Resolution: Satisfying end`
   };
-  return structures[textType.toLowerCase()] || structures.narrative;
+  const normalizedType = (textType && typeof textType === 'string') ? textType.toLowerCase() : 'narrative';
+  return structures[normalizedType] || structures.narrative;
 }
 
 // Get synonyms for words
@@ -458,5 +460,6 @@ function getFallbackVocabulary(textType: string): string[] {
     descriptive: ["ethereal", "serene", "luminous", "ephemeral", "cacophony", "mellifluous", "panoramic", "verdant", "opulent", "resplendent"],
     creative: ["whimsical", "surreal", "enigmatic", "transcendent", "kaleidoscopic", "juxtaposition", "benevolent", "malevolent", "epiphany", "soliloquy"]
   };
-  return vocabularyMap[textType.toLowerCase()] || vocabularyMap.narrative;
+  const normalizedType = (textType && typeof textType === 'string') ? textType.toLowerCase() : 'narrative';
+  return vocabularyMap[normalizedType] || vocabularyMap.narrative;
 }
