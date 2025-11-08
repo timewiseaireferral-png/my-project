@@ -409,7 +409,12 @@ export const EnhancedCoachPanel = ({
 
   // NEW: Get dynamic sidebar content based on textType
   const sidebarContent = useMemo(() => {
-    return WRITING_MATE_SIDEBAR_CONTENT[textType as keyof typeof WRITING_MATE_SIDEBAR_CONTENT] || WRITING_MATE_SIDEBAR_CONTENT.default;
+    // Ensure textType is a valid string before using it
+    if (!textType || typeof textType !== 'string') {
+      return WRITING_MATE_SIDEBAR_CONTENT.default;
+    }
+    const normalizedType = textType.toLowerCase().trim();
+    return WRITING_MATE_SIDEBAR_CONTENT[normalizedType as keyof typeof WRITING_MATE_SIDEBAR_CONTENT] || WRITING_MATE_SIDEBAR_CONTENT.default;
   }, [textType]);
 
   // Scroll to bottom of messages
@@ -659,9 +664,18 @@ export const EnhancedCoachPanel = ({
       {/* OPTIMIZED: Single Header with Compact Toggle */}
       <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="flex flex-col space-y-2">
-          {/* Top Row: Title and Word Count */}
+          {/* Top Row: Title, OpenAI Status, and Word Count */}
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-white">✨ Writing Mate</h2>
+            <div className="flex items-center space-x-2">
+              <h2 className="text-base font-bold text-white">✨ Writing Mate</h2>
+              {/* OpenAI Connection Indicator */}
+              {openAIConnected && (
+                <div className="flex items-center space-x-1" title="AI Assistant Connected">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-green-300 font-medium">AI</span>
+                </div>
+              )}
+            </div>
             <div className="text-xs text-white opacity-90 font-medium">
               {content.trim() ? `${content.trim().split(/\s+/).length} words` : '0 words'}
             </div>
@@ -765,11 +779,71 @@ export const EnhancedCoachPanel = ({
       </div>
 
       {/* OPTIMIZED: Content Area with More Vertical Space */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden flex flex-col">
         {currentView === 'coach' ? (
           <>
-            {/* Messages Area - OPTIMIZED: More space, less padding */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-white dark:bg-slate-900" style={{ height: 'calc(100% - 70px)' }}>
+            {/* Quick Query Suggestions - Moved to top for better UX */}
+            {messages.length === 0 && !isLoadingResponse && (
+              <div className="px-3 pt-3 pb-2 flex-shrink-0 bg-white dark:bg-slate-900">
+                <button
+                  onClick={() => setIsQuickQueriesOpen(!isQuickQueriesOpen)}
+                  className={`flex items-center justify-between w-full p-2 rounded-lg text-sm font-medium transition-colors mb-2 ${
+                    darkMode
+                      ? 'bg-slate-700 hover:bg-slate-600 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                  }`}
+                >
+                  <span className="flex items-center space-x-2">
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Quick Questions</span>
+                  </span>
+                  {isQuickQueriesOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </button>
+                {isQuickQueriesOpen && (
+                  <div className="grid grid-cols-2 gap-2 p-2 border rounded-lg shadow-inner bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => {
+                        handleSendMessage("How can I improve my opening?");
+                        setIsQuickQueriesOpen(false);
+                      }}
+                      className="text-left p-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-300 transition-colors"
+                    >
+                      ✨ Improve opening
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleSendMessage("What vocabulary can I use?");
+                        setIsQuickQueriesOpen(false);
+                      }}
+                      className="text-left p-2 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded text-xs text-purple-800 dark:text-purple-300 transition-colors"
+                    >
+                      📚 Better words
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleSendMessage("How do I add more detail?");
+                        setIsQuickQueriesOpen(false);
+                      }}
+                      className="text-left p-2 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 border border-green-200 dark:border-green-800 rounded text-xs text-green-800 dark:text-green-300 transition-colors"
+                    >
+                      🎨 Add detail
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleSendMessage("What should I write next?");
+                        setIsQuickQueriesOpen(false);
+                      }}
+                      className="text-left p-2 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded text-xs text-orange-800 dark:text-orange-300 transition-colors"
+                    >
+                      🎯 What's next?
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Messages Area - OPTIMIZED: Better scroll behavior */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-white dark:bg-slate-900">
 
               {/* Getting Started - Dynamic Content */}
               <div className="bg-white dark:bg-slate-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">
@@ -1223,66 +1297,6 @@ export const EnhancedCoachPanel = ({
 
               <div ref={messagesEndRef} />
             </div>
-
-              {/* Quick Query Suggestions - Collapsible */}
-            {messages.length === 0 && !isLoadingResponse && (
-              <div className="px-3 pb-2">
-                <button
-                  onClick={() => setIsQuickQueriesOpen(!isQuickQueriesOpen)}
-                  className={`flex items-center justify-between w-full p-2 rounded-lg text-sm font-medium transition-colors mb-2 ${
-                    darkMode
-                      ? 'bg-slate-700 hover:bg-slate-600 text-white'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
-                  }`}
-                >
-                  <span className="flex items-center space-x-2">
-                    <MessageSquare className="w-4 h-4" />
-                    <span>Quick Questions</span>
-                  </span>
-                  {isQuickQueriesOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                </button>
-                {isQuickQueriesOpen && (
-                  <div className="grid grid-cols-2 gap-2 p-2 border rounded-lg shadow-inner bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700">
-                    <button
-                      onClick={() => {
-                        handleSendMessage("How can I improve my opening?");
-                        setIsQuickQueriesOpen(false); // Close after selection
-                      }}
-                      className="text-left p-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-300 transition-colors"
-                    >
-                      ✨ Improve opening
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleSendMessage("What vocabulary can I use?");
-                        setIsQuickQueriesOpen(false); // Close after selection
-                      }}
-                      className="text-left p-2 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded text-xs text-purple-800 dark:text-purple-300 transition-colors"
-                    >
-                      📚 Better words
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleSendMessage("How do I add more detail?");
-                        setIsQuickQueriesOpen(false); // Close after selection
-                      }}
-                      className="text-left p-2 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 border border-green-200 dark:border-green-800 rounded text-xs text-green-800 dark:text-green-300 transition-colors"
-                    >
-                      🎨 Add detail
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleSendMessage("What should I write next?");
-                        setIsQuickQueriesOpen(false); // Close after selection
-                      }}
-                      className="text-left p-2 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded text-xs text-orange-800 dark:text-orange-300 transition-colors"
-                    >
-                      🎯 What's next?
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Input Area */}
             <div className="p-3 border-t border-gray-200 dark:border-gray-700">
