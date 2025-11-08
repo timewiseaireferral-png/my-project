@@ -1269,7 +1269,7 @@ export const EnhancedCoachPanel = ({
                   </div>
                 )}
               </div>
-            )}`],path:
+            )}
 
             {/* Input Area */}
             <div className="p-3 border-t border-gray-200 dark:border-gray-700">
