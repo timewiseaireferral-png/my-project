@@ -37,7 +37,7 @@ export class ChatSessionService {
       const sessionId = this.generateSessionId();
 
       const { data, error } = await supabase
-        .from('chat_session')
+        .from('chat_sessions')
         .insert({
           user_id: userId,
           session_id: sessionId,
@@ -76,7 +76,7 @@ export class ChatSessionService {
   ): Promise<boolean> {
     try {
       const { error } = await supabase
-        .from('chat_session')
+        .from('chat_sessions')
         .update({
           ...updates,
           user_text: updates.userText,
@@ -100,7 +100,7 @@ export class ChatSessionService {
   static async getSession(sessionId: string): Promise<ChatSession | null> {
     try {
       const { data, error } = await supabase
-        .from('chat_session')
+        .from('chat_sessions')
         .select('*')
         .eq('session_id', sessionId)
         .single();
@@ -120,7 +120,7 @@ export class ChatSessionService {
   static async getLatestSession(userId: string): Promise<ChatSession | null> {
     try {
       const { data, error } = await supabase
-        .from('chat_session')
+        .from('chat_sessions')
         .select('*')
         .eq('user_id', userId)
         .order('last_accessed_at', { ascending: false })
@@ -163,7 +163,7 @@ export class ChatSessionService {
       }
 
       await supabase
-        .from('chat_session')
+        .from('chat_sessions')
         .update({ last_accessed_at: new Date().toISOString() })
         .eq('session_id', sessionId);
 
@@ -205,7 +205,7 @@ export class ChatSessionService {
   private static async getSessionUUID(sessionId: string): Promise<string | null> {
     try {
       const { data, error } = await supabase
-        .from('chat_session')
+        .from('chat_sessions')
         .select('id')
         .eq('session_id', sessionId)
         .single();
@@ -225,7 +225,7 @@ export class ChatSessionService {
   static async deleteSession(sessionId: string): Promise<boolean> {
     try {
       const { error } = await supabase
-        .from('chat_session')
+        .from('chat_sessions')
         .delete()
         .eq('session_id', sessionId);
 
@@ -251,7 +251,7 @@ export class ChatSessionService {
       cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
       const { data, error } = await supabase
-        .from('chat_session')
+        .from('chat_sessions')
         .delete()
         .eq('user_id', userId)
         .lt('last_accessed_at', cutoffDate.toISOString())
@@ -281,7 +281,7 @@ export class ChatSessionService {
     try {
       // Try to get the latest session for this user and text type
       const { data, error } = await supabase
-        .from('chat_session')
+        .from('chat_sessions')
         .select('*')
         .eq('user_id', userId)
         .eq('text_type', textType)
