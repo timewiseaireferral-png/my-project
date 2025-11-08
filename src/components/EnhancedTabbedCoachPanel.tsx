@@ -4,14 +4,6 @@ import { analyzeText } from '../lib/textAnalyzer';
 import { analyzeContext } from '../lib/contextualAwareness';
 import { enhancedIntelligentResponseGenerator, EnhancedCoachingContext } from '../lib/enhancedIntelligentResponseGenerator';
 
-// Assuming these components exist in your project structure based on our previous analysis
-import GrammarCorrectionPanel from './GrammarCorrectionPanel';
-import SentenceStructurePanel from './SentenceStructurePanel';
-import WritingIssuesPanel from './WritingIssuesPanel';
-import VocabularyEnhancementPanel from './VocabularyEnhancementPanel';
-import RubricPanel from './RubricPanel';
-
-
 interface ChatMessage {
   id: string;
   text: string;
@@ -26,11 +18,9 @@ interface EnhancedTabbedCoachPanelProps {
   content: string;
   textType?: 'narrative' | 'persuasive' | 'expository' | 'descriptive' | 'creative';
   timeElapsed?: number;
-  // Fix: Panel-Steps - Add currentWordCount prop
-  currentWordCount: number;
 }
 
-export function EnhancedTabbedCoachPanel({
+export function FixedEnhancedTabbedCoachPanel({
   analysis,
   onApplyFix,
   content,
@@ -40,24 +30,6 @@ export function EnhancedTabbedCoachPanel({
   const [activeTab, setActiveTab] = useState('coach');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [dynamicExamples, setDynamicExamples] = useState<string[]>([]); // Fix: Panel-Examples - State for dynamic examples
-  
-  // CRIT-03 Fix: Implement useDebounce hook for real-time feedback
-  const useDebounce = (value: any, delay: number) => {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-    useEffect(() => {
-      const handler = setTimeout(() => {
-        setDebouncedValue(value);
-      }, delay);
-      return () => {
-        clearTimeout(handler);
-      };
-    }, [value, delay]);
-    return debouncedValue;
-  };
-
-
-  
   const [isLoading, setIsLoading] = useState(false);
   const [currentTextType, setCurrentTextType] = useState(textType);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -98,90 +70,6 @@ export function EnhancedTabbedCoachPanel({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-    // CRIT-03 Fix: Implement real-time feedback logic
-  const debouncedContentChange = useDebounce(content, 1500); // Debounce content changes by 1.5s
-
-  useEffect(() => {
-    const contentWordCount = debouncedContentChange.trim().split(/\s+/).filter(w => w.length > 0).length;
-    if (contentWordCount > 50) { // Only trigger if content is substantial
-      handleRealTimeFeedback();
-      handleDynamicExamples(debouncedContentChange); // Fix: Panel-Examples - Trigger dynamic example generation
-    }
-  }, [debouncedContentChange]);
-
-  const handleRealTimeFeedback = async () => {
-    if (isLoading) return;
-
-    setIsLoading(true);
-
-    try {
-      const textAnalysis = analyzeText(content);
-      const contextualState = analyzeContext(content, textAnalysis);
-
-      const coachingContext: EnhancedCoachingContext = {
-        textType: currentTextType,
-        currentContent: content,
-        analysis: textAnalysis,
-        contextualState,
-        timeElapsed,
-        wordCount: content.split(/\s+/).filter(word => word.length > 0).length
-      };
-
-      const response = await enhancedIntelligentResponseGenerator.generateRealTimeTip(
-        coachingContext
-      );
-
-      if (response && response.message) {
-        const aiMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          text: `🤖 Real-Time Tip: ${response.message}`,
-          isUser: false,
-          timestamp: new Date(),
-          priority: response.priority || 'low'
-        };
-
-        setMessages(prev => {
-          const lastMessage = prev[prev.length - 1];
-          if (lastMessage && lastMessage.text === aiMessage.text) {
-            return prev;
-          }
-          return [...prev, aiMessage];
-        });
-      }
-
-    } catch (error) {
-      console.error('Error generating real-time feedback:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fix: Panel-Examples - Logic to generate dynamic examples
-  const handleDynamicExamples = async (currentContent: string) => {
-    if (currentContent.trim().length < 50) {
-      setDynamicExamples([]);
-      return;
-    }
-
-    try {
-      // Placeholder for actual API call to generate examples
-      // In a real scenario, this would call an LLM endpoint
-      const mockExamples = [
-        `Try a stronger verb: Replace "walked" with "trudged" or "sauntered" in your last sentence.`,
-        `Consider a simile for your description: "The old house stood like a forgotten sentinel."`,
-        `Improve your opening: Instead of "It was a dark and stormy night," try a more active start.`,
-        `Add sensory detail: What does the air smell like in your current scene?`,
-        `Vary your sentence structure: Start a sentence with a dependent clause.`,
-      ];
-      setDynamicExamples(mockExamples.slice(0, 3 + Math.floor(Math.random() * 3))); // 3-5 examples
-    } catch (error) {
-      console.error('Error generating dynamic examples:', error);
-      setDynamicExamples([]);
-    }
-  };
-
-
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -267,30 +155,6 @@ export function EnhancedTabbedCoachPanel({
     }
   };
 
-  // Fix: Panel-Examples - Logic to generate dynamic examples
-  const handleDynamicExamples = async (currentContent: string) => {
-    if (currentContent.trim().length < 50) {
-      setDynamicExamples([]);
-      return;
-    }
-
-    try {
-      // Placeholder for actual API call to generate examples
-      // In a real scenario, this would call an LLM endpoint
-      const mockExamples = [
-        `Try a stronger verb: Replace "walked" with "trudged" or "sauntered" in your last sentence.`,
-        `Consider a simile for your description: "The old house stood like a forgotten sentinel."`,
-        `Improve your opening: Instead of "It was a dark and stormy night," try a more active start.`,
-        `Add sensory detail: What does the air smell like in your current scene?`,
-        `Vary your sentence structure: Start a sentence with a dependent clause.`,
-      ];
-      setDynamicExamples(mockExamples.slice(0, 3 + Math.floor(Math.random() * 3))); // 3-5 examples
-    } catch (error) {
-      console.error('Error generating dynamic examples:', error);
-      setDynamicExamples([]);
-    }
-  };
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -315,9 +179,8 @@ export function EnhancedTabbedCoachPanel({
     }
   };
 
-  // Use the currentWordCount prop passed from the parent
-  const { currentWordCount } = props;
-  const progress = Math.min((currentWordCount / 400) * 100, 100);
+  const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+  const progress = Math.min((wordCount / 400) * 100, 100);
   const completionPercentage = Math.floor(progress);
 
   return (
@@ -327,7 +190,7 @@ export function EnhancedTabbedCoachPanel({
         {/* Top section with title and timer */}
         <div className="px-4 py-3">
           <div className="flex items-center justify-between mb-3">
-	            <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-lg">Writing Mate Coach</h3>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-lg">Coach</h3>
             <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
               {Math.floor(timeElapsed / 60)}:{(timeElapsed % 60).toString().padStart(2, '0')}/40:00
             </div>
@@ -337,19 +200,16 @@ export function EnhancedTabbedCoachPanel({
           <div className="mb-3">
             <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
               <span>Progress to 400 words</span>
-	              <span className="text-green-600 dark:text-green-400 font-medium">
-	                {currentWordCount > 350 ? 'Ahead • Excellent pace!' : 'On track • Good pace!'}
-	              </span>
+              <span className="text-green-600 dark:text-green-400 font-medium">
+                {wordCount > 350 ? 'Ahead • Excellent pace!' : 'On track • Good pace!'}
+              </span>
             </div>
-	            <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
-	              <div
-	                className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
-	                style={{ width: `${progress}%` }}
-	              />
-	            </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Word Count: {currentWordCount}
-              </div>
+            <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
+              <div
+                className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
         </div>
 
@@ -362,12 +222,12 @@ export function EnhancedTabbedCoachPanel({
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex flex-col items-center justify-center p-3 rounded-lg text-xs font-medium transition-colors ${
                   activeTab === tab.id
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
                 }`}
               >
                 <tab.icon className="w-5 h-5 mb-1" />
-                {tab.label}
+                <span>{tab.label}</span>
               </button>
             ))}
           </div>
@@ -375,155 +235,99 @@ export function EnhancedTabbedCoachPanel({
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-grow overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-hidden">
         {activeTab === 'coach' && (
-          <div className="flex flex-col h-full">
-            <div className="flex-grow overflow-y-auto space-y-3 pr-2">
+          <div className="h-full flex flex-col">
+            {/* Chat header */}
+            <div className="flex-shrink-0 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-700 dark:to-slate-600 border-b dark:border-slate-700">
+              <div className="flex items-center space-x-2">
+                <MessageCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200">NSW Writing Coach</h4>
+              </div>
+              <div className="flex items-center space-x-4 mt-2 text-sm">
+                <span className="text-blue-600 dark:text-blue-400">0 tips given</span>
+                <span className="text-green-600 dark:text-green-400">{completionPercentage}% complete</span>
+              </div>
+            </div>
+
+            {/* Messages - This is the scrollable area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((message) => (
                 <div
                   key={message.id}
                   className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-xs lg:max-w-md px-4 py-3 rounded-xl shadow-md transition-all duration-300 ${
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                       message.isUser
-                        ? 'bg-blue-500 text-white rounded-br-none'
-                        : `bg-white dark:bg-slate-700 text-gray-800 dark:text-gray-200 rounded-tl-none border-l-4 ${getMessagePriorityColor(message.priority)}`
+                        ? 'bg-blue-600 text-white'
+                        : `border-l-4 ${getMessagePriorityColor(message.priority)} text-gray-800 dark:text-gray-200 dark:bg-slate-700`
                     }`}
                   >
-                    <p className="whitespace-pre-wrap text-sm">{message.text}</p>
-                    <span className="block text-right text-xs mt-1 opacity-60">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                    <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                    <p className="text-xs mt-1 opacity-70">
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                      {message.priority && !message.isUser && (
+                        <span className="ml-2 font-medium">{message.priority}</span>
+                      )}
+                    </p>
                   </div>
                 </div>
               ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 dark:bg-slate-700 px-4 py-2 rounded-lg">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
-            
-            {/* Input Area */}
-            <div className="flex-shrink-0 pt-4">
-              <div className="flex items-center space-x-2">
-                <textarea
+
+            {/* Fixed Input Area */}
+            <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  placeholder="Ask your coach a question..."
-                  rows={1}
-                  className="flex-grow p-3 border border-gray-300 dark:border-slate-600 rounded-lg resize-none focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white"
-                  // Fix: Panel-Chat - Enable chat input field once user starts typing (content.trim().length > 0)
-                  disabled={isLoading || content.trim().length === 0}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask me anything about writing, or just keep typing..."
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                  disabled={isLoading}
                 />
                 <button
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim() || isLoading}
-                  className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isLoading ? (
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                   ) : (
-                    <Send className="w-5 h-5" />
-                  )}
+                  <Send className="w-4 h-4" />
                 </button>
+              </div>
+              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                💡 Try asking: "How can I improve this sentence?" or "What should I write next?"
+                <span className="float-right">
+                  Time: {Math.floor((40 * 60 - timeElapsed) / 60)}:{((40 * 60 - timeElapsed) % 60).toString().padStart(2, '0')} left • Words: {wordCount}/400
+                </span>
               </div>
             </div>
           </div>
         )}
 
-	        {activeTab === 'ideas' && (
-	          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
-	            <h4 className="font-semibold text-lg text-yellow-800 dark:text-yellow-200 mb-2 flex items-center">
-	              <Lightbulb className="w-5 h-5 mr-2" /> Dynamic Examples
-	            </h4>
-	            <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-4">
-	              Here are some dynamic examples and suggestions based on your current writing to help you improve.
-	            </p>
-	            {/* Fix: Panel-Examples - Dynamic content */}
-	            {dynamicExamples.length > 0 ? (
-	              <ul className="space-y-3">
-	                {dynamicExamples.map((example, index) => (
-	                  <li key={index} className="p-3 bg-white dark:bg-slate-800 rounded-md border border-yellow-300 dark:border-yellow-700 shadow-sm text-sm text-gray-700 dark:text-gray-300">
-	                    {example}
-	                  </li>
-	                ))}
-	              </ul>
-	            ) : (
-	              <div className="mt-3 p-3 bg-white dark:bg-slate-800 rounded-md border border-yellow-300 dark:border-yellow-700">
-	                <p className="text-gray-600 dark:text-gray-400 italic">
-	                  Keep writing! Once you have at least 50 words, I'll generate dynamic examples to help you.
-	                </p>
-	              </div>
-	            )}
-	          </div>
-	        )}
-
-        {activeTab === 'structure' && (
-          <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
-            <h4 className="font-semibold text-lg text-green-800 dark:text-green-200 mb-2 flex items-center">
-              <BookOpen className="w-5 h-5 mr-2" /> Structure Guide
-            </h4>
-            <p className="text-sm text-green-700 dark:text-green-300">
-              This tab will provide a step-by-step guide for structuring your essay, tailored to the NSW Selective School requirements.
-              It will track your progress through the introduction, body paragraphs, and conclusion.
-            </p>
-            {/* Placeholder for dynamic content */}
-            <div className="mt-3 p-3 bg-white dark:bg-slate-800 rounded-md border border-green-300 dark:border-green-700">
-              <p className="text-gray-600 dark:text-gray-400 italic">
-                Structure guidance will appear here...
-              </p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'language' && (
-          <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-800">
-            <h4 className="font-semibold text-lg text-purple-800 dark:text-purple-200 mb-2 flex items-center">
-              <Zap className="w-5 h-5 mr-2" /> Language & Style
-            </h4>
-            <p className="text-sm text-purple-700 dark:text-purple-300">
-              This tab will focus on enhancing your vocabulary, sentence fluency, and overall writing style.
-              It will highlight areas for improvement and suggest more sophisticated alternatives.
-            </p>
-            {/* Placeholder for dynamic content */}
-            <div className="mt-3 p-3 bg-white dark:bg-slate-800 rounded-md border border-purple-300 dark:border-purple-700">
-              <p className="text-gray-600 dark:text-gray-400 italic">
-                Language and style suggestions will appear here...
-              </p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'grammar' && (
-          <div className="p-4 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-800">
-            <h4 className="font-semibold text-lg text-red-800 dark:text-red-200 mb-2 flex items-center">
-              <CheckCircle className="w-5 h-5 mr-2" /> Grammar & Punctuation
-            </h4>
-            <p className="text-sm text-red-700 dark:text-red-300">
-              This tab will provide real-time corrections and explanations for grammar, spelling, and punctuation errors.
-            </p>
-            {/* Placeholder for GrammarCorrectionPanel */}
-            <div className="mt-3">
-              <GrammarCorrectionPanel content={content} />
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'toolkit' && (
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
-            <h4 className="font-semibold text-lg text-blue-800 dark:text-blue-200 mb-2 flex items-center">
-              <Wrench className="w-5 h-5 mr-2" /> Writing Toolkit
-            </h4>
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              This tab contains useful tools like a thesaurus, a list of common literary devices, and a timer/word-count tracker.
-            </p>
-            {/* Placeholder for dynamic content */}
-            <div className="mt-3 p-3 bg-white dark:bg-slate-800 rounded-md border border-blue-300 dark:border-blue-700">
-              <p className="text-gray-600 dark:text-gray-400 italic">
-                Toolkit features will be accessible here...
-              </p>
+        {/* Other tabs content */}
+        {activeTab !== 'coach' && (
+          <div className="p-4 h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+            <div className="text-center">
+              <div className="text-4xl mb-2">🚧</div>
+              <p className="dark:text-gray-300">This tab is under development</p>
+              <p className="text-sm mt-1 dark:text-gray-400">Focus on the Coach tab for now!</p>
             </div>
           </div>
         )}
