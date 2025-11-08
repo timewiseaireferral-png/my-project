@@ -143,19 +143,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [evaluationProgress, setEvaluationProgress] = useState("");
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
-  const useDebounce = (value: any, delay: number) => {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-    useEffect(() => {
-      const handler = setTimeout(() => {
-        setDebouncedValue(value);
-      }, delay);
-      return () => {
-        clearTimeout(handler);
-      };
-    }, [value, delay]);
-    return debouncedValue;
-  };
-  const debouncedLocalContent = useDebounce(localContent, 3000); // Debounce content changes by 3s
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
   const [isLoadingPrompt, setIsLoadingPrompt] = useState(false);
   const [hidePrompt, setHidePrompt] = useState(false);
@@ -292,51 +279,41 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   }, [effectivePrompt, popupFlowCompleted]);
 
   // Auto-fetch AI analysis for Grammar/Vocabulary tabs (debounced)
-  // Use the debounced content to trigger the fetch
   useEffect(() => {
     // Only fetch if content is substantial (50+ words)
-    const wordCount = debouncedLocalContent.trim().split(/\s+/).filter(w => w.length > 0).length;
+    const wordCount = localContent.trim().split(/\s+/).filter(w => w.length > 0).length;
     if (wordCount < 50) {
-      // Fix: FUNC-01 - Clear analysis if content is too short to prevent stale data
-      if (analysis !== null && onAnalysisChange) {
-        onAnalysisChange(null);
-      }
       return;
     }
 
-    console.log('🔄 Auto-fetching AI analysis for Writing Mate tabs...');
-    // The debounce is now handled by `debouncedLocalContent`
-    const fetchAnalysis = async () => {
+    // Debounce: wait 3 seconds after user stops typing
+    const timeoutId = setTimeout(async () => {
+      console.log('🔄 Auto-fetching AI analysis for Writing Mate tabs...');
       try {
-        const feedbackResponse = await fetch("/api/ai-feedback", { 
-          
+        const feedbackResponse = await fetch("/.netlify/functions/ai-feedback", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            essayText: debouncedLocalContent,
+            essayText: localContent,
             textType: textType
           })
         });
 
-        if (!feedbackResponse.ok) {
-          throw new Error(`HTTP error! status: ${feedbackResponse.status}`);
+        if (feedbackResponse.ok) {
+          const feedbackData = await feedbackResponse.json();
+          console.log('✅ Auto-fetched AI feedback:', {
+            grammar: feedbackData.grammarCorrections?.length || 0,
+            vocab: feedbackData.vocabularyEnhancements?.length || 0
+          });
+          setAiAnalysis(feedbackData);
         }
-
-        const data = await feedbackResponse.json();
-        setAiAnalysis(data); // Update local state
-        if (onAnalysisChange) {
-          onAnalysisChange(data); // Update parent state via prop
-        }
-        console.log('✅ AI analysis fetched successfully.');
-
       } catch (error) {
-        console.error('❌ Error fetching AI analysis:', error);
+        console.error('❌ Auto-fetch error:', error);
       }
-    };
+    }, 3000);
 
-    fetchAnalysis();
-
-  }, [debouncedLocalContent, textType, onAnalysisChange, analysis]);
+    return () => clearTimeout(timeoutId);
+  }, [localContent, textType]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -515,7 +492,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       console.log('Calling AI NSW evaluation API...');
 
       // Call AI evaluation backend
-      const response = await fetch("/api/nsw-ai-evaluation", {
+      const response = await fetch("/.netlify/functions/nsw-ai-evaluation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -998,25 +975,24 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       {panelVisible && (
         <div className={`w-[340px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
           darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
-        }`}>          <EnhancedCoachPanel
-	          textType={textType}
-	          content={localContent}
-	          writingPrompt={initialPrompt}
-	          wordCount={currentWordCount}
-	          analysis={aiAnalysis || analysis}
-	          user={user}
-	          darkMode={darkMode}
-	          openAIConnected={openAIConnected}
-	          openAILoading={openAILoading}
-	          onAnalysisUpdate={(newAnalysis) => onAnalysisChange && onAnalysisChange(newAnalysis)}
-	          onApplyFix={(fix: LintFix) => {
-	            // Implement fix application logic here
-	          }}
-	          selectedText={selectedText}
-	          isFocusMode={false}
-            // Fix: Panel-Steps - Pass the real-time word count
-            currentWordCount={currentWordCount}
-	        />
+        }`}>
+          <EnhancedCoachPanel
+          textType={textType}
+          content={localContent}
+          writingPrompt={initialPrompt}
+          wordCount={currentWordCount}
+          analysis={aiAnalysis || analysis}
+          user={user}
+          darkMode={darkMode}
+          openAIConnected={openAIConnected}
+          openAILoading={openAILoading}
+          onAnalysisUpdate={(newAnalysis) => onAnalysisChange && onAnalysisChange(newAnalysis)}
+          onApplyFix={(fix: LintFix) => {
+            // Implement fix application logic here
+          }}
+          selectedText={selectedText}
+          isFocusMode={false}
+        />
         </div>
       )}
 
