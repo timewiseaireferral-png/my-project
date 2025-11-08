@@ -5,22 +5,19 @@ from AIOperationsService import get_nsw_selective_feedback
 def handler(event, context):
     if event["httpMethod"] == "POST":
         try:
-            body = json.loads(event["body"] )
+            body = json.loads(event["body"])
             content = body.get("content")
             text_type = body.get("textType")
             assistance_level = body.get("assistanceLevel")
 
-            # The get_nsw_selective_feedback function already checks for empty content.
-            # It returns a specific structure that we can check for here.
-            feedback = get_nsw_selective_feedback(content, text_type, assistance_level)
-            
-            # If feedbackCategories is empty, it means there's no feedback to give.
-            if not feedback.get("feedbackCategories"):
+            if not content:
                 return {
-                    "statusCode": 204,  # No Content
-                    "body": ""
+                    "statusCode": 400,
+                    "body": json.dumps({"error": "Content is required"})
                 }
 
+            feedback = get_nsw_selective_feedback(content, text_type, assistance_level)
+            
             return {
                 "statusCode": 200,
                 "headers": { "Content-Type": "application/json" },
@@ -35,3 +32,4 @@ def handler(event, context):
         "statusCode": 405,
         "body": "Method Not Allowed"
     }
+
