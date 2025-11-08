@@ -417,14 +417,14 @@ export const EnhancedCoachPanel = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Load session on mount
+  // Initialize new session on mount (don't load old messages)
   useEffect(() => {
     if (user?.id) {
-      ChatSessionService.loadSession(user.id, textType).then(session => {
-        setSessionId(session.sessionId);
-        setMessages(session.messages);
-        setMessageCount(session.messages.length);
-      });
+      // Always start with a fresh session - no pre-loaded messages
+      const newSessionId = ChatSessionService.generateSessionId();
+      setSessionId(newSessionId);
+      setMessages([]);
+      setMessageCount(0);
     }
   }, [user?.id, textType]);
 
@@ -433,27 +433,39 @@ export const EnhancedCoachPanel = ({
     scrollToBottom();
   }, [messages]);
 
-  // Simulate analysis and feedback generation
+  // Simulate analysis and feedback generation with proper debounce
   useEffect(() => {
-    if (content.trim().length > 10 && !isAnalyzing && !isLoadingResponse) {
+    // Skip if already analyzing or loading
+    if (isLoadingResponse) return;
+
+    if (content.trim().length > 10) {
       setIsAnalyzing(true);
       const timer = setTimeout(() => {
-        const newAnalysis = NSWCriteriaAnalyzer.analyzeContent(content, textType);
-        const newFeedback = ComprehensiveFeedbackAnalyzer.analyze(content, newAnalysis, textType);
-        setComprehensiveFeedback(newFeedback);
-        if (onAnalysisUpdate) {
-          onAnalysisUpdate(newAnalysis);
+        try {
+          const newAnalysis = NSWCriteriaAnalyzer.analyzeContent(content, textType);
+          const newFeedback = ComprehensiveFeedbackAnalyzer.analyze(content, newAnalysis, textType);
+          setComprehensiveFeedback(newFeedback);
+          if (onAnalysisUpdate) {
+            onAnalysisUpdate(newAnalysis);
+          }
+        } catch (error) {
+          console.error('Analysis error:', error);
+        } finally {
+          setIsAnalyzing(false);
         }
-        setIsAnalyzing(false);
       }, 1000); // Debounce time for analysis
-      return () => clearTimeout(timer);
-    } else if (content.trim().length <= 10) {
+      return () => {
+        clearTimeout(timer);
+        setIsAnalyzing(false);
+      };
+    } else {
+      setIsAnalyzing(false);
       setComprehensiveFeedback(null);
       if (onAnalysisUpdate) {
         onAnalysisUpdate(null);
       }
     }
-  }, [content, textType, isAnalyzing, isLoadingResponse, onAnalysisUpdate]);
+  }, [content, textType, isLoadingResponse]);
 
   // Simulate dynamic example generation
   useEffect(() => {
@@ -468,11 +480,12 @@ export const EnhancedCoachPanel = ({
     }
   }, [comprehensiveFeedback, textType]);
 
-  const handleSendMessage = async () => {
-    if (inputMessage.trim() === '' || isLoadingResponse) return;
+  const handleSendMessage = async (quickMessage?: string) => {
+    const messageToSend = quickMessage || inputMessage.trim();
+    if (messageToSend === '' || isLoadingResponse) return;
 
-    const userMessageContent = inputMessage.trim();
-    setInputMessage('');
+    const userMessageContent = messageToSend;
+    setInputMessage(''); // Clear input regardless
     setIsLoadingResponse(true);
     responseStartTime.current = Date.now();
 
