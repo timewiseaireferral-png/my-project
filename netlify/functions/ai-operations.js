@@ -129,6 +129,21 @@ function createFallbackResponse(content, textType) {
 async function handleDynamicOperation(operation, requestBody, headers) {
   const { writingPrompt, currentContent, textType, wordCount, systemPrompt } = requestBody;
 
+  console.log(`Handling dynamic operation: ${operation}`);
+
+  // Validate systemPrompt
+  if (!systemPrompt || typeof systemPrompt !== 'string') {
+    console.error('Missing or invalid systemPrompt:', { operation, hasPrompt: !!systemPrompt });
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({
+        error: "Invalid request: systemPrompt is required",
+        operation
+      }),
+    };
+  }
+
   // If OpenAI is not available, return appropriate fallback
   if (!openai) {
     console.log(`OpenAI not available for operation: ${operation}`);
@@ -143,6 +158,8 @@ async function handleDynamicOperation(operation, requestBody, headers) {
   }
 
   try {
+    console.log(`Calling OpenAI for ${operation}...`);
+
     // Execute AI request with the provided system prompt
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -155,6 +172,7 @@ async function handleDynamicOperation(operation, requestBody, headers) {
       response_format: { type: "json_object" }
     });
 
+    console.log(`OpenAI response received for ${operation}`);
     const aiResponse = JSON.parse(response.choices[0].message.content);
 
     // Return the AI response with appropriate wrapping based on operation
