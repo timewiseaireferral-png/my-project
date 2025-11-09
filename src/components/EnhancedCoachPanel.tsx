@@ -1411,19 +1411,22 @@ export const EnhancedCoachPanel = ({
             </div>
           </div>
         ) : currentView === 'builder' ? (
-          <StepByStepWritingBuilder
-            textType={textType}
-            content={content}
-            onContentChange={onChange}
-          />
-        ) : currentView === 'detailed' ? (
-          comprehensiveFeedback ? (
-            <ComprehensiveFeedbackDisplay
-              feedback={comprehensiveFeedback}
-              darkMode={darkMode}
-              onApplyFix={onApplyFix}
+          <div className="overflow-y-auto h-full">
+            <StepByStepWritingBuilder
+              textType={textType}
+              content={content}
+              onContentChange={onChange}
             />
-          ) : (
+          </div>
+        ) : currentView === 'detailed' ? (
+          <div className="overflow-y-auto h-full">
+            {comprehensiveFeedback ? (
+              <ComprehensiveFeedbackDisplay
+                feedback={comprehensiveFeedback}
+                darkMode={darkMode}
+                onApplyFix={onApplyFix}
+              />
+            ) : (
             <div className="p-6 text-center">
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
                 <BookOpen className="w-12 h-12 text-blue-500 mx-auto mb-3" />
@@ -1440,7 +1443,8 @@ export const EnhancedCoachPanel = ({
                 </ul>
               </div>
             </div>
-          )
+            )}
+          </div>
         ) : currentView === 'grammar' ? (
           <GrammarCorrectionPanel
             text={content || ''}
