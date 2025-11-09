@@ -3,6 +3,7 @@
 // Uses OpenAI GPT-4 for sophisticated, real-time feedback
 
 const { OpenAI } = require("openai");
+const { validateProSubscription, unauthorizedResponse } = require("./lib/subscriptionMiddleware");
 
 const SYSTEM_PROMPT = `You are an expert NSW Selective School writing assessor for students aged 9-11 preparing for placement tests.
 
@@ -208,7 +209,7 @@ exports.handler = async (event) => {
   // CORS headers
   const headers = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Content-Type": "application/json"
   };
@@ -226,6 +227,18 @@ exports.handler = async (event) => {
       body: JSON.stringify({ error: "Method not allowed" })
     };
   }
+
+  // SUBSCRIPTION CHECK: Validate Pro subscription
+  console.log('🔒 Checking subscription access...');
+  const authHeader = event.headers.authorization || event.headers.Authorization;
+  const subscriptionCheck = await validateProSubscription(authHeader);
+
+  if (!subscriptionCheck.hasAccess) {
+    console.log(`❌ Access denied: ${subscriptionCheck.error}`);
+    return unauthorizedResponse('This feature requires a Pro subscription. Upgrade now to unlock unlimited AI evaluations and feedback.');
+  }
+
+  console.log(`✅ Access granted for user: ${subscriptionCheck.userId}`);
 
   try {
     console.log('NSW Evaluation Handler: Parsing request body...');
