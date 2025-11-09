@@ -142,11 +142,6 @@ const GRAMMAR_RULES = {
       suggestions: ["affect", "effect"]
     },
     {
-      pattern: /\b(then|than)\b/gi,
-      message: "Check if you\'re using 'then' (time) or 'than' (comparison).",
-      suggestions: ["then", "than"]
-    },
-    {
       pattern: /\b(their|there|they\'re)\b/gi,
       message: "Check if you\'re using 'their' (possession), 'there' (place), or 'they\'re' (they are).",
       suggestions: ["their", "there", "they\'re"]
@@ -160,6 +155,35 @@ const GRAMMAR_RULES = {
       pattern: /\b(lose|loose)\b/gi,
       message: "Check if you\'re using 'lose' (verb) or 'loose' (adjective).",
       suggestions: ["lose", "loose"]
+    }
+  ],
+
+  // Context-aware than/then rules
+  thenThanRules: [
+    {
+      pattern: /\b(better|worse|more|less|greater|smaller|higher|lower|faster|slower|bigger|smaller|older|younger|taller|shorter|stronger|weaker|richer|poorer|happier|sadder|easier|harder)\s+then\b/gi,
+      message: "Did you mean 'than' (for comparison)? 'Then' refers to time.",
+      suggestions: (match: string) => [match.replace(/then/gi, 'than')]
+    },
+    {
+      pattern: /\b(rather|other)\s+then\b/gi,
+      message: "Did you mean 'than' (for comparison)? 'Then' refers to time.",
+      suggestions: (match: string) => [match.replace(/then/gi, 'than')]
+    },
+    {
+      pattern: /\b(more|less)\s+\w+\s+then\b/gi,
+      message: "Did you mean 'than' (for comparison)? 'Then' refers to time.",
+      suggestions: (match: string) => [match.replace(/then/gi, 'than')]
+    },
+    {
+      pattern: /\b(first|next|and)\s+than\b/gi,
+      message: "Did you mean 'then' (for time sequence)? 'Than' is used for comparisons.",
+      suggestions: (match: string) => [match.replace(/than/gi, 'then')]
+    },
+    {
+      pattern: /\b(since|back|until|now)\s+than\b/gi,
+      message: "Did you mean 'then' (for time)? 'Than' is used for comparisons.",
+      suggestions: (match: string) => [match.replace(/than/gi, 'then')]
     }
   ]
 };
