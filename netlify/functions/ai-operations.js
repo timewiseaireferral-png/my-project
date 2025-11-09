@@ -125,6 +125,79 @@ function createFallbackResponse(content, textType) {
   };
 }
 
+// Handle dynamic AI operations (examples, vocabulary, suggestions, etc.)
+async function handleDynamicOperation(operation, requestBody, headers) {
+  const { writingPrompt, currentContent, textType, wordCount, systemPrompt } = requestBody;
+
+  // If OpenAI is not available, return appropriate fallback
+  if (!openai) {
+    console.log(`OpenAI not available for operation: ${operation}`);
+    return {
+      statusCode: 503,
+      headers,
+      body: JSON.stringify({
+        error: "AI service temporarily unavailable",
+        fallback: true
+      }),
+    };
+  }
+
+  try {
+    // Execute AI request with the provided system prompt
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Generate response for operation: ${operation}` }
+      ],
+      max_tokens: 1500,
+      temperature: 0.7,
+      response_format: { type: "json_object" }
+    });
+
+    const aiResponse = JSON.parse(response.choices[0].message.content);
+
+    // Return the AI response with appropriate wrapping based on operation
+    let responseData;
+    switch (operation) {
+      case 'generate_examples':
+        responseData = { examples: aiResponse.examples || [] };
+        break;
+      case 'generate_vocabulary':
+        responseData = { vocabulary: aiResponse.vocabulary || [] };
+        break;
+      case 'generate_suggestions':
+        responseData = { suggestion: aiResponse.suggestion || {} };
+        break;
+      case 'generate_step_guidance':
+        responseData = { guidance: aiResponse.guidance || {} };
+        break;
+      case 'generate_quick_questions':
+        responseData = { questions: aiResponse.questions || [] };
+        break;
+      default:
+        responseData = aiResponse;
+    }
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(responseData),
+    };
+
+  } catch (error) {
+    console.error(`Error in ${operation}:`, error);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        error: `Failed to process ${operation}`,
+        details: error.message
+      }),
+    };
+  }
+}
+
 // Handle chat requests with contextual awareness
 async function handleChatRequest(userMessage, textType, currentContent, wordCount, headers) {
   try {
@@ -201,7 +274,13 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { content, textType, assistanceLevel, userMessage, currentContent, wordCount } = JSON.parse(event.body);
+    const requestBody = JSON.parse(event.body || "{}");
+    const { content, textType, assistanceLevel, userMessage, currentContent, wordCount, operation, writingPrompt, systemPrompt } = requestBody;
+
+    // Handle new dynamic AI operations
+    if (operation) {
+      return await handleDynamicOperation(operation, requestBody, headers);
+    }
 
     // Handle chat requests (when userMessage is provided)
     if (userMessage) {
