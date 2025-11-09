@@ -66,11 +66,20 @@ RESPONSE FORMAT (JSON only):
 Be encouraging but honest. Provide specific, actionable feedback with exact text positions for highlighting.`;
 
 async function evaluateWithAI(essayText, textType, prompt) {
+  console.log('Starting NSW evaluation...');
+  console.log(`Text type: ${textType}, Essay length: ${essayText?.length || 0} chars`);
+
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || !apiKey.startsWith("sk-")) {
+  if (!apiKey) {
+    console.error('OPENAI_API_KEY environment variable not set');
     throw new Error("OpenAI API key not configured");
   }
+  if (!apiKey.startsWith("sk-")) {
+    console.error('OPENAI_API_KEY does not start with sk-');
+    throw new Error("OpenAI API key is invalid");
+  }
 
+  console.log('API key validated, initializing OpenAI client...');
   const openai = new OpenAI({ apiKey });
 
   const userPrompt = `Evaluate this ${textType} writing for NSW Selective School assessment.
@@ -105,19 +114,30 @@ Return ONLY valid JSON matching the specified format.`;
 
   const startTime = Date.now();
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: userPrompt }
-    ],
-    temperature: 0.3,
-    max_tokens: 2500,
-    response_format: { type: "json_object" }
-  });
+  console.log('Calling OpenAI API...');
+  let completion;
+  try {
+    completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userPrompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 2500,
+      response_format: { type: "json_object" }
+    });
+    console.log('OpenAI API call successful');
+  } catch (apiError) {
+    console.error('OpenAI API call failed:', apiError.message);
+    throw new Error(`OpenAI API error: ${apiError.message}`);
+  }
 
   const latency = Date.now() - startTime;
+  console.log(`OpenAI latency: ${latency}ms`);
+
   const response = completion.choices[0].message.content;
+  console.log('Parsing OpenAI response...');
 
   try {
     const feedback = JSON.parse(response);
@@ -208,11 +228,15 @@ exports.handler = async (event) => {
   }
 
   try {
+    console.log('NSW Evaluation Handler: Parsing request body...');
     const body = JSON.parse(event.body || "{}");
     const { essayContent, textType = "narrative", prompt = "" } = body;
 
+    console.log(`Request details: textType=${textType}, essayLength=${essayContent?.length || 0}, hasPrompt=${!!prompt}`);
+
     // Validation
     if (!essayContent || essayContent.trim().length < 20) {
+      console.log('Validation failed: Essay content too short');
       return {
         statusCode: 400,
         headers,
@@ -227,6 +251,7 @@ exports.handler = async (event) => {
 
     try {
       const feedback = await evaluateWithAI(essayContent, textType, prompt);
+      console.log('Evaluation successful, returning feedback');
 
       return {
         statusCode: 200,
