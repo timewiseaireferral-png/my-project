@@ -1,0 +1,80 @@
+/*
+ * AI Coach Panel - Tab Visibility Fix
+ * Ensures all tabs are visible without scrolling
+ */
+
+/* Ensure tab container allows proper wrapping and visibility */
+.coach-panel-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  grid-auto-rows: minmax(min-content, auto);
+}
+
+/* Compact tab button styling for better space utilization */
+.coach-panel-tab-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  min-height: 3.5rem;
+}
+
+/* Ensure tab icons are appropriately sized */
+.coach-panel-tab-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .coach-panel-tabs {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.375rem;
+  }
+
+  .coach-panel-tab-button {
+    padding: 0.5rem;
+    font-size: 0.6875rem;
+    min-height: 3rem;
+  }
+
+  .coach-panel-tab-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+}
+
+/* For very small screens, stack tabs vertically */
+@media (max-width: 480px) {
+  .coach-panel-tabs {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.25rem;
+  }
+
+  .coach-panel-tab-button {
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+/* Dark mode overrides */
+.dark .coach-panel-tab-button {
+  transition: all 0.2s;
+}
+
+/* Prevent header overflow */
+.coach-panel-header {
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+/* Ensure proper spacing for tab container */
+.coach-panel-tab-container {
+  padding: 0 1rem 0.75rem;
+}
