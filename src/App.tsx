@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { AppProvider } from './contexts/AppContext';
 import { LearningProvider } from './contexts/LearningContext';
 import AppContent from './components/AppContent';
@@ -38,22 +39,24 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppProvider>
-          <LearningProvider>
-            {/* Only use BrowserRouter on the client side */}
-            {typeof window !== 'undefined' ? (
-              <BrowserRouter>
+        <SubscriptionProvider>
+          <AppProvider>
+            <LearningProvider>
+              {/* Only use BrowserRouter on the client side */}
+              {typeof window !== 'undefined' ? (
+                <BrowserRouter>
+                  <ReferralHandler>
+                    <AppContent />
+                  </ReferralHandler>
+                </BrowserRouter>
+              ) : (
                 <ReferralHandler>
                   <AppContent />
                 </ReferralHandler>
-              </BrowserRouter>
-            ) : (
-              <ReferralHandler>
-                <AppContent />
-              </ReferralHandler>
-            )}
-          </LearningProvider>
-        </AppProvider>
+              )}
+            </LearningProvider>
+          </AppProvider>
+        </SubscriptionProvider>
       </AuthProvider>
     </ThemeProvider>
   );
