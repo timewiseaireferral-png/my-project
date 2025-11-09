@@ -896,36 +896,23 @@ export const EnhancedCoachPanel = ({
             {/* Messages Area - OPTIMIZED: Better scroll behavior */}
             <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-white dark:bg-slate-900">
 
-              {/* Getting Started - Dynamic Content */}
-              <div className="bg-white dark:bg-slate-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Target className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">🎯 Getting Started</h3>
+              {/* Getting Started - Dynamic Guidance */}
+              {prompt && (
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-lg shadow-sm border border-blue-200 dark:border-blue-800 text-gray-700 dark:text-gray-300">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">✍️ Your Writing Prompt</h3>
+                  </div>
+                  <div className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-blue-300 dark:border-blue-700 mb-3">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white italic">
+                      "{prompt}"
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    💡 Ask me questions about your prompt or click the tabs above for examples and vocabulary!
+                  </p>
                 </div>
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-3">
-                    <Lightbulb className="w-5 h-5 text-yellow-500 flex-shrink-0" />
-                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                      <span className="font-medium text-gray-900 dark:text-gray-100">Suggestion:</span>
-                      {sidebarContent.suggestion}
-                    </p>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <BookOpen className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                      <span className="font-medium text-gray-900 dark:text-gray-100">Example:</span>
-                      {sidebarContent.example}
-                    </p>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <Star className="w-5 h-5 text-purple-500 flex-shrink-0" />
-                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                      <span className="font-medium text-gray-900 dark:text-gray-100">⭐ Next Step:</span>
-                      {sidebarContent.nextStep}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              )}
               
               {/* Grammar Issues Summary - Always visible if there are issues */}
               {comprehensiveFeedback && comprehensiveFeedback.grammarIssues && comprehensiveFeedback.grammarIssues.length > 0 && (
