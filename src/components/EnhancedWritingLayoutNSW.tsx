@@ -378,15 +378,25 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     setIsLoadingPrompt(false);
   }, [setPrompt, onChange, onPopupCompleted]);
 
+  // Helper function to fix punctuation spacing issues
+  const cleanPunctuationSpacing = (text: string): string => {
+    // Remove spaces before punctuation marks at the end of text or before line breaks
+    return text.replace(/\s+([.,!?;:])\s*$/g, '$1')
+               .replace(/\s+([.,!?;:])\s*(\n)/g, '$1$2')
+               .replace(/\s+([.,!?;:])\s+/g, '$1 '); // Normalize multiple spaces after punctuation
+  };
+
   const handleContentChange = useCallback((newContent: string) => {
-    setLocalContent(newContent);
-    
-    if (newContent.trim().length > 0 && !isTimerRunning && elapsedTime === 0 && onStartTimer) {
+    // Clean up punctuation spacing issues
+    const cleanedContent = cleanPunctuationSpacing(newContent);
+    setLocalContent(cleanedContent);
+
+    if (cleanedContent.trim().length > 0 && !isTimerRunning && elapsedTime === 0 && onStartTimer) {
       onStartTimer();
     }
-    
+
     if (eventBus && detectNewParagraphs) {
-      const newParagraphs = detectNewParagraphs(content, newContent);
+      const newParagraphs = detectNewParagraphs(content, cleanedContent);
       if (newParagraphs.length > 0) {
         eventBus.emit('newParagraphsDetected', { paragraphs: newParagraphs, textType });
       }
