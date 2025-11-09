@@ -1,17 +1,17 @@
 /*
  * AI Coach Panel - Tab Visibility Fix
- * Ensures all tabs are visible without scrolling
+ * Uses flexbox with wrapping to ensure all tabs are always visible
  */
 
-/* Ensure tab container allows proper wrapping and visibility */
+/* Flexbox container with wrapping - allows tabs to flow naturally */
 .coach-panel-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  grid-auto-rows: minmax(min-content, auto);
+  align-items: stretch;
 }
 
-/* Compact tab button styling for better space utilization */
+/* Compact tab button styling with flex properties */
 .coach-panel-tab-button {
   display: flex;
   flex-direction: column;
@@ -23,6 +23,8 @@
   font-weight: 500;
   transition: all 0.2s;
   min-height: 3.5rem;
+  flex: 1 1 30%;
+  min-width: 30%;
 }
 
 /* Ensure tab icons are appropriately sized */
@@ -30,16 +32,14 @@
   width: 1rem;
   height: 1rem;
   margin-bottom: 0.25rem;
+  flex-shrink: 0;
 }
 
 /* Responsive adjustments for smaller screens */
 @media (max-width: 768px) {
-  .coach-panel-tabs {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.375rem;
-  }
-
   .coach-panel-tab-button {
+    flex: 1 1 45%;
+    min-width: 45%;
     padding: 0.5rem;
     font-size: 0.6875rem;
     min-height: 3rem;
@@ -51,14 +51,11 @@
   }
 }
 
-/* For very small screens, stack tabs vertically */
+/* For very small screens, make tabs slightly larger */
 @media (max-width: 480px) {
-  .coach-panel-tabs {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.25rem;
-  }
-
   .coach-panel-tab-button {
+    flex: 1 1 48%;
+    min-width: 48%;
     padding: 0.5rem 0.25rem;
   }
 }
