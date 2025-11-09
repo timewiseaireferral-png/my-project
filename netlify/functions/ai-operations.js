@@ -293,7 +293,7 @@ exports.handler = async (event, context) => {
 
   try {
     const requestBody = JSON.parse(event.body || "{}");
-    const { content, textType, assistanceLevel, userMessage, currentContent, wordCount, operation, writingPrompt, systemPrompt } = requestBody;
+    const { content, textType, assistanceLevel, userMessage, currentContent, wordCount, operation } = requestBody;
 
     // Handle new dynamic AI operations
     if (operation) {
