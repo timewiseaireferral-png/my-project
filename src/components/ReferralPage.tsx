@@ -14,7 +14,7 @@ const GradientText: React.FC<{ children: React.ReactNode, className?: string }> 
 interface UserProfile {
   id: string;
   email: string;
-  paid_referrals_count: number;
+  referral_count: number;
   referral_code: string | null;
   // Add other necessary fields
 }
@@ -80,19 +80,34 @@ const ReferralPage: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) {
+        console.log('ReferralPage: No user found');
         setLoading(false);
         return;
       }
 
+      console.log('ReferralPage: Fetching profile for user:', user.id);
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, email, paid_referrals_count, referral_code')
+        .select('id, email, referral_count, referral_code')
         .eq('id', user.id)
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        console.error('ReferralPage: Error fetching profile:', error);
+        // Set profile with user ID as fallback referral code
+        setProfile({
+          id: user.id,
+          email: user.email || '',
+          referral_count: 0,
+          referral_code: user.id
+        });
       } else {
+        console.log('ReferralPage: Profile fetched:', data);
+        // If referral_code is null, use user ID as fallback
+        if (!data.referral_code) {
+          console.warn('ReferralPage: referral_code is null, using user ID as fallback');
+          data.referral_code = user.id;
+        }
         setProfile(data as UserProfile);
       }
       setLoading(false);
@@ -114,7 +129,7 @@ const ReferralPage: React.FC = () => {
     { count: 3, reward: '$10 Off for 6 Months', description: 'After your third paid referral.' },
   ];
 
-  const currentCount = profile?.paid_referrals_count || 0;
+  const currentCount = profile?.referral_count || 0;
 
   if (loading) {
     // Use the dark theme loading style
@@ -134,7 +149,7 @@ const ReferralPage: React.FC = () => {
         <header className="text-center py-10">
           <GradientText>Refer & Earn Rewards</GradientText>
           <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-            Share your unique link with friends. When they sign up and make their first payment, you earn rewards!
+            Share your unique link with friends. When they sign up and subscribe to a paid plan, you earn rewards!
           </p>
         </header>
 
