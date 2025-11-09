@@ -330,9 +330,8 @@ function AppContent() {
   const handleSubmit = useCallback(() => {
     // Logic to save content and navigate to feedback page
     console.log('Submitting content for feedback...');
-    // For now, just navigate to a placeholder
-    navigate('/dashboard');
-  }, [navigate]);
+    // Note: Don't navigate here - let the component handle showing the report
+  }, []);
 
   // Helper functions for writing area
   const handleToggleFocusMode = useCallback(() => setFocusMode(prev => !prev), []);
