@@ -171,10 +171,19 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       console.log('⚠️ No existing user profile found with email. Update failed.');
     }
 
-        // START: Tiered Referral Logic
-    const referrerId = session.metadata?.referrerId;
-    if (referrerId) {
-      console.log(`📈 Referred by user: ${referrerId}. Incrementing count.`);
+    // START: Tiered Referral Logic
+    // Check if this user was referred by someone
+    const { data: userProfile, error: userProfileError } = await supabase
+      .from('user_profiles')
+      .select('referred_by')
+      .eq('id', userId)
+      .single();
+
+    if (userProfileError) {
+      console.error('❌ Error fetching user profile for referral check:', userProfileError);
+    } else if (userProfile?.referred_by) {
+      const referralCode = userProfile.referred_by;
+      console.log(`📈 User was referred with code: ${referralCode}. Processing referral.`);
 
       // 1. Call the complete_referral function to increment count and update log
       const { data: rpcData, error: rpcError } = await supabase.rpc('complete_referral', {
@@ -187,22 +196,25 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         // The complete_referral function returns TRUE on success.
         console.log(`✅ Referral completed for user ${userId}.`);
 
-        // 2. Fetch the referrer's profile to apply the reward
+        // 2. Find the referrer by their referral code
         const { data: referrerProfile, error: referrerError } = await supabase
           .from('user_profiles')
-          .select('stripe_customer_id, stripe_subscription_id, referral_count')
-          .eq('id', referrerId)
+          .select('id, stripe_customer_id, stripe_subscription_id, referral_count')
+          .eq('referral_code', referralCode)
           .single();
 
         if (referrerError || !referrerProfile) {
           console.error('❌ Error fetching referrer profile:', referrerError);
         } else {
+          console.log(`🎁 Referrer found: ${referrerProfile.id}, current referral count: ${referrerProfile.referral_count}`);
           // 3. Apply the reward based on the new referral_count
           await applyReferralReward(referrerProfile.referral_count, referrerProfile.stripe_subscription_id);
         }
       } else {
         console.log(`⚠️ Referral not completed for user ${userId}. Check complete_referral logs.`);
       }
+    } else {
+      console.log(`ℹ️ User ${userId} was not referred by anyone.`);
     }
     // END: Tiered Referral Logic
 
