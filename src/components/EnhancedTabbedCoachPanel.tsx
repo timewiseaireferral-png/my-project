@@ -214,14 +214,14 @@ export function FixedEnhancedTabbedCoachPanel({
           </div>
         </div>
 
-        {/* Tab navigation - Updated to show all tabs in 2 rows */}
+        {/* Tab navigation - Flexbox with wrapping to ensure all tabs are visible */}
         <div className="px-4 pb-3">
-          <div className="grid grid-cols-3 gap-2 auto-rows-auto">
+          <div className="flex flex-wrap gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center justify-center p-2.5 rounded-lg text-xs font-medium transition-colors ${
+                className={`flex flex-col items-center justify-center p-2.5 rounded-lg text-xs font-medium transition-colors flex-1 min-w-[30%] ${
                   activeTab === tab.id
                     ? 'bg-blue-600 text-white shadow-md'
                     : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
