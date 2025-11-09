@@ -7,161 +7,141 @@ interface StructureGuideModalProps {
 }
 
 // Define the correct structures for different writing types
+// The keys are the internal text_type identifiers (e.g., 'narrative', 'persuasive')
 const STRUCTURE_GUIDES: { [key: string]: { title: string; points: string[] } } = {
-  // --- Core Essay Types ---
-  'Expository Writing': {
-    title: 'Expository Structure (Standard Essay)',
+  // --- NSW Selective Writing Test Aligned Structures ---
+  'narrative': {
+    title: 'Narrative Writing (Story Arc Structure)',
     points: [
-      'Introduction (Hook, Background, Thesis Statement)',
-      'Body Paragraph 1 (Topic Sentence, Evidence, Analysis)',
-      'Body Paragraph 2 (Topic Sentence, Evidence, Analysis)',
-      'Body Paragraph 3 (Topic Sentence, Evidence, Analysis)',
-      'Conclusion (Restate Thesis, Summarize Main Points, Concluding Statement)',
+      'Orientation: Introduce character, setting, and time.',
+      'Complication: The problem or conflict begins.',
+      'Climax: The turning point or most exciting moment.',
+      'Resolution: The conflict is resolved and the story concludes.',
     ],
   },
-  'Persuasive Writing': {
-    title: 'Persuasive Structure (PEEEL)',
+  'descriptive': {
+    title: 'Descriptive Writing (Sensory Focus Structure)',
     points: [
-      'Introduction (Hook, Background, Contention/Thesis)',
-      'Body Paragraph 1 (Point, Evidence, Explanation, Elaborate, Link)',
-      'Body Paragraph 2 (Point, Evidence, Explanation, Elaborate, Link)',
-      'Body Paragraph 3 (Point, Evidence, Explanation, Elaborate, Link - often a counter-argument)',
-      'Conclusion (Restate Contention, Summarize Points, Call to Action)',
+      'Introduction: Establish the main subject and mood.',
+      'Body Paragraphs: Focus on a single sense (Sight, Sound, Smell, Taste, Touch) or a specific area/aspect of the subject.',
+      'Conclusion: Summarize the overall impression or feeling created.',
     ],
   },
-  'Narrative Writing': {
-    title: 'Narrative Structure (Story Mountain)',
+  'imaginative': {
+    title: 'Imaginative Writing (Flexible Structure)',
     points: [
-      'Orientation (Introduction of characters, setting, and time)',
-      'Complication (The problem or conflict is introduced)',
-      'Rising Action (Events leading to the climax)',
-      'Climax (The most exciting or turning point of the story)',
-      'Falling Action (Events after the climax, leading to the end)',
-      'Resolution (The problem is solved and the story concludes)',
+      'Follows the Narrative Arc (Orientation, Complication, Climax, Resolution).',
+      'Allows for non-linear elements (e.g., flashbacks, dream sequences).',
+      'Strong focus on figurative language and originality.',
     ],
   },
-  'Discussion Writing': {
-    title: 'Discussion Structure',
+  'recount': {
+    title: 'Recount Writing (Chronological Structure)',
     points: [
-      'Introduction (Statement of Issue, Thesis/Contention)',
-      'Arguments For (Point, Evidence, Explanation)',
-      'Arguments Against (Point, Evidence, Explanation)',
-      'Conclusion (Summary of both sides, Personal Opinion/Recommendation)',
+      'Orientation: Who, what, where, when, why.',
+      'Series of Events: Retell events in the order they happened (chronological order).',
+      'Reorientation/Conclusion: Personal comment on the event or a concluding thought.',
     ],
   },
-  // --- Creative & Personal Types ---
-  'Reflective Writing': {
-    title: 'Reflective Structure (What, So What, Now What)',
+  'persuasive': {
+    title: 'Persuasive Writing (Standard Persuasive Essay Structure)',
     points: [
-      'Description (What happened? Who was involved?)',
-      'Feelings (What were your thoughts and feelings?)',
-      'Evaluation (What was good and bad about the experience?)',
-      'Analysis (What sense can you make of the situation?)',
-      'Conclusion (What did you learn? What will you do next?)',
+      'Introduction: Hook, Background, Thesis Statement (clear position).',
+      'Body Paragraphs (PEEL/TEEL): Point, Evidence/Example, Explanation, Link to Thesis.',
+      'Conclusion: Restate Thesis, Summarize Main Points, Concluding Statement/Call to Action.',
     ],
   },
-  'Descriptive Writing': {
-    title: 'Descriptive Structure (Focus on Sensory Detail)',
+  'discursive': {
+    title: 'Discursive Writing (Balanced Exploration Structure)',
     points: [
-      'Introduction (Set the scene and mood)',
-      'Body Paragraph 1 (Focus on one main sensory detail/aspect - e.g., Sight)',
-      'Body Paragraph 2 (Focus on a second sensory detail/aspect - e.g., Sound and Smell)',
-      'Body Paragraph 3 (Focus on a third sensory detail/aspect - e.g., Touch and Taste)',
-      'Conclusion (Restate the overall impression or atmosphere)',
+      'Introduction: Hook, Background, Statement of Intent (topic overview, not a thesis).',
+      'Body Paragraphs: Explore one perspective/side per paragraph, using evidence and examples.',
+      'Conclusion: Summarize the explored ideas, offer a final thought, and avoid a definitive conclusion.',
     ],
   },
-  'Recount Writing': {
-    title: 'Recount Structure (Chronological Order)',
+  'discussion': {
+    title: 'Discussion Writing (For and Against Structure)',
     points: [
-      'Orientation (Who, What, Where, When)',
-      'Event 1 (Detail the first event in the sequence)',
-      'Event 2 (Detail the next event in the sequence)',
-      'Event 3 (Detail the final event in the sequence)',
-      'Reorientation (Concluding statement or personal comment/reflection)',
+      'Introduction: State the issue and the two sides of the debate.',
+      'Arguments For: Present points supporting one side.',
+      'Arguments Against: Present points supporting the opposing side.',
+      'Conclusion: Summarize both sides and offer a balanced final judgment or personal opinion.',
     ],
   },
-  'Diary Entry': {
-    title: 'Diary Entry Structure',
+  'speech': {
+    title: 'Speech (Rhetorical Structure)',
     points: [
-      'Date and Salutation (e.g., Dear Diary,)',
-      'Opening Sentence (State the main topic/event of the day)',
-      'Body Paragraphs (Detail key events, thoughts, and feelings in chronological or thematic order)',
-      'Closing Sentence (Summary or looking forward to tomorrow)',
-      'Signature (e.g., Your name or initials)',
+      'Salutation/Greeting: Address the audience directly.',
+      'Introduction: Hook, State the purpose/thesis clearly.',
+      'Body: Use rhetorical devices (repetition, rule of three) and clear signposting.',
+      'Conclusion: Summarize, Call to Action, Thank the audience.',
     ],
   },
-  // --- Practical & Transactional Types ---
-  'Advertisement': {
-    title: 'Advertisement Structure (AIDA)',
+  'expository': {
+    title: 'Expository Writing (Informative Structure)',
     points: [
-      'Attention (Catchy headline or image)',
-      'Interest (Detail the benefits and features of the product/service)',
-      'Desire (Create a strong emotional connection)',
-      'Action (Clear Call to Action - e.g., Buy Now, Visit Website)',
+      'Introduction: Hook, Define the topic, State the scope of the essay.',
+      'Body Paragraphs: Each paragraph explains one aspect of the topic with facts, examples, and analysis.',
+      'Conclusion: Summarize the main points and provide a final insight into the topic.',
     ],
   },
-  'Advice Sheet': {
-    title: 'Advice Sheet Structure',
+  'reflective': {
+    title: 'Reflective Writing (Personal Insight Structure)',
     points: [
-      'Title (Clear and engaging)',
-      'Introduction (Explain the purpose and importance of the advice)',
-      'Numbered/Bulleted Sections (Clear, concise advice points with explanations)',
-      'Summary/Conclusion (Final encouraging words or key takeaway)',
-      'Contact/Further Resources (Where to get more help)',
+      'Description: Describe the experience or event.',
+      'Feelings: Explore the emotions and thoughts during the experience.',
+      'Evaluation: Analyze what was good/bad about the experience.',
+      'Analysis: Make sense of the experience (What did I learn?).',
+      'Conclusion: What will I do differently next time?',
     ],
   },
-  'Guide': {
-    title: 'Guide Structure (How-To)',
+  'advice_sheet': {
+    title: 'Advice Sheet (Direct/Instructional Structure)',
     points: [
-      'Title (Clearly state the goal of the guide)',
-      'Introduction (What the guide will help the reader achieve)',
-      'Materials/Prerequisites (What is needed to start)',
-      'Step-by-Step Instructions (Clear, numbered, and concise steps)',
-      'Conclusion (Final tips and troubleshooting)',
+      'Title: Clear, action-oriented title (e.g., "How to...").',
+      'Introduction: State the purpose and target audience.',
+      'Numbered/Bulleted Steps: Clear, concise, and easy-to-follow instructions/tips.',
+      'Conclusion: Encouragement or final summary.',
     ],
   },
-  'Letter Writing': {
-    title: 'Formal Letter Structure',
+  'guide': {
+    title: 'Guide (Hierarchical/Sectional Structure)',
     points: [
-      'Sender\'s Address and Date',
-      'Recipient\'s Name and Address',
-      'Salutation (e.g., Dear Mr/Ms [Surname])',
-      'Introduction (State the purpose of the letter clearly)',
-      'Body Paragraphs (Detail the main points)',
-      'Conclusion (Summarize and state desired action)',
-      'Sign-off (e.g., Yours sincerely,)',
-      'Signature and Printed Name',
+      'Title/Introduction: Define the subject and what the guide will cover.',
+      'Sections/Subheadings: Organize information logically with clear headings.',
+      'Visual Aids: Use bullet points, bold text, and short paragraphs for readability.',
+      'Conclusion: Summary and where to find more information.',
     ],
   },
-  'News Report': {
-    title: 'News Report Structure (Inverted Pyramid)',
+  'diary_entry': {
+    title: 'Diary Entry (Personal/Chronological Structure)',
     points: [
-      'Headline (Clear, concise, and attention-grabbing)',
-      'Lead Paragraph (The 5 W\'s: Who, What, Where, When, Why)',
-      'Body Paragraphs (Detailed explanation of the events, quotes, and background)',
-      'Less Important Details (Additional context or future developments)',
+      'Date/Salutation: Date and a personal greeting (e.g., "Dear Diary").',
+      'Opening: State the main event or feeling of the day.',
+      'Body: Detail the events and personal reflections in chronological order.',
+      'Closing: A final thought or sign-off.',
     ],
   },
-  'Review Writing': {
-    title: 'Review Structure',
+  'letter': {
+    title: 'Letter Writing (Formal/Informal Structure)',
     points: [
-      'Title and Introduction (Name of item, brief summary, overall opinion)',
-      'Summary/Description (What is it about? No spoilers)',
-      'Analysis/Evaluation (Detailed discussion of strengths and weaknesses)',
-      'Conclusion (Final recommendation, rating, and target audience)',
+      'Sender/Recipient Details: (Formal) Addresses and Date.',
+      'Salutation: (Dear Mr./Ms. or Dear [Name]).',
+      'Introduction: State the purpose of the letter.',
+      'Body: Detail the main points in separate paragraphs.',
+      'Closing: (Yours sincerely/faithfully or Best regards), Signature.',
     ],
   },
-  'Speech': {
-    title: 'Speech Structure',
+  'news_report': {
+    title: 'News Report (Inverted Pyramid Structure)',
     points: [
-      'Introduction (Attention-grabbing hook, clear statement of purpose/thesis)',
-      'Body Point 1 (Main argument/topic with supporting evidence)',
-      'Body Point 2 (Second main argument/topic with supporting evidence)',
-      'Body Point 3 (Third main argument/topic with supporting evidence)',
-      'Conclusion (Summary of main points, powerful final statement/call to action)',
+      'Headline: Catchy and informative.',
+      'Lead Paragraph (The 5 W\'s): Summarize the Who, What, Where, When, Why.',
+      'Body: Detail the facts, quotes, and background information in descending order of importance.',
+      'Conclusion: Final comment or future outlook.',
     ],
   },
-  // Fallback to Expository structure for any unhandled type
+  // Fallback to General Essay structure for any unhandled type
   'default': {
     title: 'General Essay Structure',
     points: [
@@ -176,9 +156,9 @@ const STRUCTURE_GUIDES: { [key: string]: { title: string; points: string[] } } =
 
 export const StructureGuideModal: React.FC<StructureGuideModalProps> = ({ isOpen, onClose, textType }) => {
   if (!isOpen) return null;
-  // Normalize textType to match keys (e.g., "narrative writing" -> "Narrative Writing")
-  const normalizedTextType = textType.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  const structure = STRUCTURE_GUIDES[normalizedTextType] || STRUCTURE_GUIDES.default;
+  // The textType prop is expected to be the internal identifier (e.g., 'narrative', 'persuasive').
+  // We use .toLowerCase() just in case, but no complex normalization is needed.
+  const structure = STRUCTURE_GUIDES[textType.toLowerCase()] || STRUCTURE_GUIDES.default;
   
   return (
     <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-80 overflow-y-auto h-full w-full z-50">
