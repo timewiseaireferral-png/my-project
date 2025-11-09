@@ -224,14 +224,32 @@ exports.handler = async (event) => {
 
     // Call AI evaluation
     console.log(`Evaluating ${textType} essay (${essayContent.length} chars)...`);
-    const feedback = await evaluateWithAI(essayContent, textType, prompt);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(feedback)
-    };
+    try {
+      const feedback = await evaluateWithAI(essayContent, textType, prompt);
 
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(feedback)
+      };
+    } catch (evalError) {
+      console.error("AI evaluation error:", evalError);
+
+      // Return a structured error response
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: "AI evaluation failed",
+          message: evalError.message || "Unknown error during evaluation",
+          details: {
+            apiKeyConfigured: !!process.env.OPENAI_API_KEY,
+            errorType: evalError.name || "Error"
+          }
+        })
+      };
+    }
   } catch (error) {
     console.error("NSW AI Evaluation Error:", error);
 
@@ -240,7 +258,7 @@ exports.handler = async (event) => {
       headers,
       body: JSON.stringify({
         error: "Failed to evaluate essay",
-        message: error.message,
+        message: error.message || "An unexpected error occurred",
         details: process.env.NODE_ENV === "development" ? error.stack : undefined
       })
     };
