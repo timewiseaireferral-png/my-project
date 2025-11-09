@@ -235,6 +235,7 @@ const COMMON_MISSPELLINGS: { [key: string]: string[] } = {
 export class GrammarSpellingChecker {
   private customDictionary: Set<string> = new Set();
   private ignoredWords: Set<string> = new Set();
+  private dictionary: Set<string> = new Set();
 
   constructor() {
     // Initialize with common words that might be flagged incorrectly
@@ -242,6 +243,21 @@ export class GrammarSpellingChecker {
     this.customDictionary.add('okay');
     this.customDictionary.add('yeah');
     this.customDictionary.add('yep');
+
+    // A basic dictionary of common English words
+    const commonWords = [
+      'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with',
+      'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her',
+      'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up',
+      'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time',
+      'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could',
+      'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think',
+      'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even',
+      'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us',
+      // Add more words to the dictionary as needed
+      'atmosphere', 'yawning', 'decided', 'heard'
+    ];
+    this.dictionary = new Set(commonWords);
   }
 
   // Add word to custom dictionary
@@ -252,6 +268,35 @@ export class GrammarSpellingChecker {
   // Add word to ignore list
   ignoreWord(word: string): void {
     this.ignoredWords.add(word.toLowerCase());
+  }
+
+  // Levenshtein distance function
+  private levenshteinDistance(a: string, b: string): number {
+    const matrix = [];
+
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1, // substitution
+            matrix[i][j - 1] + 1,     // insertion
+            matrix[i - 1][j] + 1      // deletion
+          );
+        }
+      }
+    }
+
+    return matrix[b.length][a.length];
   }
 
   // Check for spelling errors
@@ -265,7 +310,7 @@ export class GrammarSpellingChecker {
       const lowerWord = word.toLowerCase();
 
       // Skip if word is in custom dictionary or ignore list
-      if (this.customDictionary.has(lowerWord) || this.ignoredWords.has(lowerWord)) {
+      if (this.customDictionary.has(lowerWord) || this.ignoredWords.has(lowerWord) || this.dictionary.has(lowerWord)) {
         currentIndex = wordIndex + word.length;
         return;
       }
@@ -279,9 +324,7 @@ export class GrammarSpellingChecker {
           suggestions: COMMON_MISSPELLINGS[lowerWord],
           type: 'spelling'
         });
-      }
-      // Basic spell check for very common patterns
-      else if (this.isLikelyMisspelled(word)) {
+      } else {
         const suggestions = this.generateSpellingSuggestions(word);
         if (suggestions.length > 0) {
           errors.push({
@@ -298,6 +341,24 @@ export class GrammarSpellingChecker {
     });
 
     return errors;
+  }
+
+  // Generate spelling suggestions using Levenshtein distance
+  private generateSpellingSuggestions(word: string): string[] {
+    const lowerWord = word.toLowerCase();
+    const suggestions: { word: string; distance: number }[] = [];
+
+    for (const dictWord of this.dictionary) {
+      const distance = this.levenshteinDistance(lowerWord, dictWord);
+      if (distance <= 2) { // Suggest words with a Levenshtein distance of 2 or less
+        suggestions.push({ word: dictWord, distance });
+      }
+    }
+
+    // Sort suggestions by distance
+    suggestions.sort((a, b) => a.distance - b.distance);
+
+    return suggestions.slice(0, 3).map(s => s.word); // Return top 3 suggestions
   }
 
   // Check for grammar errors
@@ -353,87 +414,6 @@ export class GrammarSpellingChecker {
     // Combine and sort by position
     const allErrors = [...grammarErrors, ...convertedSpellingErrors];
     return allErrors.sort((a, b) => a.start - b.start);
-  }
-
-  // Check if a word is likely misspelled using basic heuristics
-  private isLikelyMisspelled(word: string): boolean {
-    const lowerWord = word.toLowerCase();
-    
-    // Skip very short words
-    if (word.length < 3) return false;
-    
-    // Skip words with numbers
-    if (/\d/.test(word)) return false;
-    
-    // Skip proper nouns (capitalized words)
-    if (word[0] === word[0].toUpperCase() && word.length > 1) return false;
-    
-    // Check for common misspelling patterns
-    const suspiciousPatterns = [
-      /(.)\1{3,}/, // Repeated characters (more than 3)
-      /[qwrtypsdghklzxcvbnm]{5,}/, // Too many consonants in a row
-      /[aeiou]{4,}/, // Too many vowels in a row
-      /^[^aeiou]+$/, // No vowels at all (except very short words)
-    ];
-    
-    return suspiciousPatterns.some(pattern => pattern.test(lowerWord));
-  }
-
-  // Generate spelling suggestions using edit distance and phonetic similarity
-  private generateSpellingSuggestions(word: string): string[] {
-    const suggestions: string[] = [];
-    const lowerWord = word.toLowerCase();
-
-    // Check for common letter swaps
-    for (let i = 0; i < word.length - 1; i++) {
-      const swapped = word.substring(0, i) + word[i + 1] + word[i] + word.substring(i + 2);
-      if (this.isValidWord(swapped)) {
-        suggestions.push(swapped);
-      }
-    }
-
-    // Check for missing letters
-    const commonLetters = 'etaoinshrdlcumwfgypbvkjxqz';
-    for (let i = 0; i <= word.length; i++) {
-      for (const letter of commonLetters) {
-        const withLetter = word.substring(0, i) + letter + word.substring(i);
-        if (this.isValidWord(withLetter)) {
-          suggestions.push(withLetter);
-        }
-      }
-    }
-
-    // Check for extra letters
-    for (let i = 0; i < word.length; i++) {
-      const withoutLetter = word.substring(0, i) + word.substring(i + 1);
-      if (this.isValidWord(withoutLetter)) {
-        suggestions.push(withoutLetter);
-      }
-    }
-
-    return suggestions.slice(0, 5); // Limit to 5 suggestions
-  }
-
-  // Basic word validation (this would ideally use a proper dictionary)
-  private isValidWord(word: string): boolean {
-    const lowerWord = word.toLowerCase();
-    
-    // Check against our custom dictionary
-    if (this.customDictionary.has(lowerWord)) return true;
-    
-    // Basic validation - check if it's a common English word pattern
-    const commonWords = new Set([
-      'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with',
-      'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her',
-      'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up',
-      'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time',
-      'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could',
-      'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think',
-      'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even',
-      'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us'
-    ]);
-    
-    return commonWords.has(lowerWord);
   }
 
   // Get error type based on category
