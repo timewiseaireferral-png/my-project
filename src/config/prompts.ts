@@ -79,7 +79,7 @@ EVALUATION CRITERIA:
 - Ideas and Content: Creativity, originality, development of ideas appropriate for selective school level
 - Structure: Clear beginning, middle, end with logical organization
 - Language: Sentence variety, sophisticated vocabulary for age group, fluent expression
-- Mechanics: Grammar, spelling, punctuation accuracy expected at selective school level
+	- Mechanics: Grammar, spelling, punctuation accuracy expected at selective school level. (Note: Basic spelling and grammar checks are handled by a local utility. Focus your evaluation on complex language use, sentence variety, and high-level mechanical issues.)
 
 TONE AND LANGUAGE:
 - Use positive, encouraging language that builds confidence
@@ -135,5 +135,3 @@ export const vocabularyEnhancements = {
   look: ['gaze', 'stare', 'observe', 'examine', 'peer'],
   think: ['believe', 'consider', 'ponder', 'reflect', 'contemplate']
 };
-
-
