@@ -3,6 +3,7 @@ import { MessageCircle, Lightbulb, BookOpen, Zap, CheckCircle, Wrench, Send } fr
 import { analyzeText } from '../lib/textAnalyzer';
 import { analyzeContext } from '../lib/contextualAwareness';
 import { enhancedIntelligentResponseGenerator, EnhancedCoachingContext } from '../lib/enhancedIntelligentResponseGenerator';
+import './coach-tabs-fix.css';
 
 interface ChatMessage {
   id: string;
@@ -213,21 +214,21 @@ export function FixedEnhancedTabbedCoachPanel({
           </div>
         </div>
 
-        {/* Tab navigation */}
+        {/* Tab navigation - Updated to show all tabs in 2 rows */}
         <div className="px-4 pb-3">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 auto-rows-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg text-xs font-medium transition-colors ${
+                className={`flex flex-col items-center justify-center p-2.5 rounded-lg text-xs font-medium transition-colors ${
                   activeTab === tab.id
                     ? 'bg-blue-600 text-white shadow-md'
                     : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
                 }`}
               >
-                <tab.icon className="w-5 h-5 mb-1" />
-                <span>{tab.label}</span>
+                <tab.icon className="w-4 h-4 mb-1" />
+                <span className="leading-tight">{tab.label}</span>
               </button>
             ))}
           </div>
