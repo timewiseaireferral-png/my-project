@@ -4,6 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
+import { ProtectedRoute } from './ProtectedRoute';
+import { FEATURES } from '../lib/accessControl';
 import './layout-fix.css';
 
 // Add this import at the top with other imports
@@ -476,17 +479,21 @@ function AppContent() {
 
           {/* Authenticated Routes */}
           <Route path="/dashboard" element={
-            user ? (
-              <Dashboard 
-                onNavigate={handleNavigation}
-                onSignOut={handleForceSignOut}
-              />
-            ) : (
-              <Navigate to="/" />
-            )
+            <ProtectedRoute requiresPro={true} feature={FEATURES.PROGRESS_TRACKING}>
+              {user ? (
+                <Dashboard
+                  onNavigate={handleNavigation}
+                  onSignOut={handleForceSignOut}
+                />
+              ) : (
+                <Navigate to="/" />
+              )}
+            </ProtectedRoute>
           } />
           <Route path="/settings" element={
-            user ? <SettingsPage onBack={() => setActivePage('dashboard')} /> : <Navigate to="/" />
+            <ProtectedRoute requiresPro={false}>
+              {user ? <SettingsPage onBack={() => setActivePage('dashboard')} /> : <Navigate to="/" />}
+            </ProtectedRoute>
           } />
           <Route path="/exam" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
@@ -511,9 +518,10 @@ function AppContent() {
             </WritingAccessCheck>
           } />
           <Route path="/writing" element={
-            <WritingAccessCheck onNavigate={handleNavigation}>
-              {prompt ? (
-                <EnhancedWritingLayoutNSW
+            <ProtectedRoute requiresPro={true} feature={FEATURES.WRITING_TOOLS}>
+              <WritingAccessCheck onNavigate={handleNavigation}>
+                {prompt ? (
+                  <EnhancedWritingLayoutNSW
                   content={content}
                   onChange={setContent}
                   textType={textType || 'narrative'}
@@ -553,22 +561,25 @@ function AppContent() {
                   Please go back to the Dashboard to select a writing prompt.
                 </div>
               )}
-            </WritingAccessCheck>
+              </WritingAccessCheck>
+            </ProtectedRoute>
           } />
           <Route path="/learning" element={
-            <>
-              <NavBar
-                activePage={activePage}
-                onNavigate={handleNavigation}
-                user={user}
-                onSignInClick={handleSignInClick}
-                onSignUpClick={handleSignUpClick}
-                onForceSignOut={handleForceSignOut}
-              />
-              <div className="main-route-content">
-                 <EnhancedLearningHub onNavigate={handleNavigation} />
-              </div>
-            </>
+            <ProtectedRoute requiresPro={true} feature={FEATURES.LEARNING_MODE}>
+              <>
+                <NavBar
+                  activePage={activePage}
+                  onNavigate={handleNavigation}
+                  user={user}
+                  onSignInClick={handleSignInClick}
+                  onSignUpClick={handleSignUpClick}
+                  onForceSignOut={handleForceSignOut}
+                />
+                <div className="main-route-content">
+                   <EnhancedLearningHub onNavigate={handleNavigation} />
+                </div>
+              </>
+            </ProtectedRoute>
           } />
           <Route path="/feedback/:essayId" element={<EssayFeedbackPage />} />
           <Route path="/evaluation/:evaluationId" element={<EvaluationPage />} />
