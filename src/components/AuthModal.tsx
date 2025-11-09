@@ -81,15 +81,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           setCurrentStep(1);
           return;
         }
-        
+
+        // Get referral code from localStorage if it exists
+        const referralCode = localStorage.getItem('referred_by');
+        console.log('AuthModal: Signing up with referral code:', referralCode);
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+              referred_by: referralCode || null
+            }
           }
         });
-        
+
         if (error) {
           setError(getKidFriendlyError(error.message));
           setCurrentStep(1);
@@ -99,6 +106,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           setMode('confirmation');
           setSuccess(true);
           setCurrentStep(3);
+
+          // Store the referral code in the user profile
+          if (referralCode) {
+            console.log('AuthModal: Storing referral code in user profile');
+            try {
+              const { error: profileError } = await supabase
+                .from('user_profiles')
+                .update({ referred_by: referralCode })
+                .eq('id', data.user.id);
+
+              if (profileError) {
+                console.error('AuthModal: Error storing referral code:', profileError);
+              } else {
+                console.log('AuthModal: Referral code stored successfully');
+                // Clear the referral code from localStorage after storing
+                localStorage.removeItem('referred_by');
+              }
+            } catch (err) {
+              console.error('AuthModal: Exception storing referral code:', err);
+            }
+          }
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
