@@ -60,29 +60,7 @@ export default function WritingWorkspaceFixed() {
     };
   }, []);
 
-  // Track text changes for progress monitoring AND coach feedback
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      const text = editorRef.current?.getText() || "";
-      if (text !== currentText) {
-        setCurrentText(text);
-        
-        // Update word count
-        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-        setWordCount(words.length);
 
-        // Trigger coach feedback for new paragraphs
-        const events = detectNewParagraphs(prevTextRef.current, text);
-        if (events.length) {
-          console.log("Emitting paragraph.ready event:", events[events.length - 1]);
-          eventBus.emit("paragraph.ready", events[events.length - 1]);
-        }
-        prevTextRef.current = text;
-      }
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, [currentText]);
 
   // NSW Evaluation Submit Handler (Critical Bug Fix)
   async function onNSWSubmit() {
@@ -176,20 +154,14 @@ export default function WritingWorkspaceFixed() {
 
   function onProgressUpdate(metrics: any) {
     console.log('Progress updated:', metrics);
+    // Update local state from editor's progress update
+    setCurrentText(metrics.text);
+    setWordCount(metrics.wordCount);
   }
 
   // Simple autosave
-  React.useEffect(() => {
-    const int = setInterval(async () => {
-      const text = editorRef.current?.getText() || "";
-      localStorage.setItem(draftId.current, JSON.stringify({ text, version }));
-      try {
-        await saveDraft(draftId.current, text, version);
-      } catch (e) {
-        console.warn("Autosave failed:", e);
-      }
-    }, 10000);
-    return () => clearInterval(int);  // --- START FIX: Session State Persistence (High Priority Fix) ---
+  // The old simple autosave is now replaced by the more robust one below
+  // --- START FIX: Session State Persistence (High Priority Fix) ---
   // Update URL search params when textType or prompt changes
   React.useEffect(() => {
     setSearchParams({ textType, prompt });
