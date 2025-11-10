@@ -3,6 +3,9 @@
 // Uses OpenAI GPT-4 for sophisticated, real-time feedback
 
 const { OpenAI } = require("openai");
+// NOTE: The subscriptionMiddleware is a TypeScript file (.ts) and needs to be compiled to JavaScript (.js)
+// for Netlify to run it. Assuming the build process handles this and the compiled file is available
+// as 'subscriptionMiddleware.js' in the same directory.
 const { validateProSubscription, unauthorizedResponse } = require("./lib/subscriptionMiddleware");
 
 const SYSTEM_PROMPT = `You are an expert NSW Selective School writing assessor for students aged 9-11 preparing for placement tests.
@@ -235,6 +238,7 @@ exports.handler = async (event) => {
 
   if (!subscriptionCheck.hasAccess) {
     console.log(`❌ Access denied: ${subscriptionCheck.error}`);
+    // FIX: Use the unauthorizedResponse from the imported module
     return unauthorizedResponse('This feature requires a Pro subscription. Upgrade now to unlock unlimited AI evaluations and feedback.');
   }
 
