@@ -153,7 +153,6 @@ Return ONLY valid JSON matching the specified format.`;
       // Force correct maximum values (NSW rubric: 40-20-25-15)
       if (scores.ideasContent && scores.ideasContent.outOf !== 12) {
         console.warn(`Correcting ideasContent outOf from ${scores.ideasContent.outOf} to 12`);
-        // Recalculate score proportionally
         const percentage = scores.ideasContent.score / scores.ideasContent.outOf;
         scores.ideasContent.outOf = 12;
         scores.ideasContent.score = Math.round(percentage * 12 * 10) / 10;
@@ -189,12 +188,78 @@ Return ONLY valid JSON matching the specified format.`;
 
       feedback.totalScore = Math.round(feedback.totalScore * 10) / 10;
 
-      console.log('✅ NSW weighting enforced:', {
-        ideasContent: `${scores.ideasContent.score}/${scores.ideasContent.outOf}`,
-        structure: `${scores.structureOrganization.score}/${scores.structureOrganization.outOf}`,
-        language: `${scores.languageVocab.score}/${scores.languageVocab.outOf}`,
-        grammar: `${scores.spellingGrammar.score}/${scores.spellingGrammar.outOf}`,
-        total: feedback.totalScore
+      // ENHANCED: Add comprehensive score summary to fix "8/5" bug
+      // Calculate raw scores (1-4 scale) from weighted scores
+      const rawIdeas = Math.round((scores.ideasContent.score / 12) * 4 * 10) / 10;
+      const rawStructure = Math.round((scores.structureOrganization.score / 6) * 4 * 10) / 10;
+      const rawLanguage = Math.round((scores.languageVocab.score / 7.5) * 4 * 10) / 10;
+      const rawGrammar = Math.round((scores.spellingGrammar.score / 4.5) * 4 * 10) / 10;
+      const rawTotal = rawIdeas + rawStructure + rawLanguage + rawGrammar;
+
+      // Calculate percentage
+      const percentage = (feedback.totalScore / 30) * 100;
+
+      // Add comprehensive scoring summary
+      feedback.scoringSummary = {
+        rawTotal: {
+          score: Math.round(rawTotal * 10) / 10,
+          outOf: 16,
+          displayFormat: `${Math.round(rawTotal * 10) / 10}/16`,
+          explanation: "Sum of all raw criterion scores (1-4 scale)"
+        },
+        weightedTotal: {
+          score: feedback.totalScore,
+          outOf: 30,
+          displayFormat: `${feedback.totalScore}/30`,
+          explanation: "NSW official weighted total using rubric percentages (Ideas 40%, Structure 20%, Language 25%, Grammar 15%)"
+        },
+        normalizedTotal: {
+          score: Math.round((rawTotal / 16) * 5 * 10) / 10,
+          outOf: 5,
+          displayFormat: `${Math.round((rawTotal / 16) * 5 * 10) / 10}/5`,
+          explanation: "Converted to 5-point scale for user-friendly display"
+        },
+        percentageScore: {
+          score: Math.round(percentage * 10) / 10,
+          outOf: 100,
+          displayFormat: `${Math.round(percentage * 10) / 10}%`,
+          explanation: "Overall performance as percentage"
+        }
+      };
+
+      // Enhance criteria scores with raw scores and percentages
+      scores.ideasContent.rawScore = rawIdeas;
+      scores.ideasContent.rawScoreOutOf = 4;
+      scores.ideasContent.percentage = Math.round((scores.ideasContent.score / 12) * 100 * 10) / 10;
+      scores.ideasContent.weightedScore = scores.ideasContent.score;
+      scores.ideasContent.weightedScoreOutOf = 12;
+
+      scores.structureOrganization.rawScore = rawStructure;
+      scores.structureOrganization.rawScoreOutOf = 4;
+      scores.structureOrganization.percentage = Math.round((scores.structureOrganization.score / 6) * 100 * 10) / 10;
+      scores.structureOrganization.weightedScore = scores.structureOrganization.score;
+      scores.structureOrganization.weightedScoreOutOf = 6;
+
+      scores.languageVocab.rawScore = rawLanguage;
+      scores.languageVocab.rawScoreOutOf = 4;
+      scores.languageVocab.percentage = Math.round((scores.languageVocab.score / 7.5) * 100 * 10) / 10;
+      scores.languageVocab.weightedScore = scores.languageVocab.score;
+      scores.languageVocab.weightedScoreOutOf = 7.5;
+
+      scores.spellingGrammar.rawScore = rawGrammar;
+      scores.spellingGrammar.rawScoreOutOf = 4;
+      scores.spellingGrammar.percentage = Math.round((scores.spellingGrammar.score / 4.5) * 100 * 10) / 10;
+      scores.spellingGrammar.weightedScore = scores.spellingGrammar.score;
+      scores.spellingGrammar.weightedScoreOutOf = 4.5;
+
+      console.log('✅ NSW weighting enforced with comprehensive scoring:', {
+        ideasContent: `${scores.ideasContent.weightedScore}/${scores.ideasContent.weightedScoreOutOf} (raw: ${rawIdeas}/4)`,
+        structure: `${scores.structureOrganization.weightedScore}/${scores.structureOrganization.weightedScoreOutOf} (raw: ${rawStructure}/4)`,
+        language: `${scores.languageVocab.weightedScore}/${scores.languageVocab.weightedScoreOutOf} (raw: ${rawLanguage}/4)`,
+        grammar: `${scores.spellingGrammar.weightedScore}/${scores.spellingGrammar.weightedScoreOutOf} (raw: ${rawGrammar}/4)`,
+        totalWeighted: `${feedback.totalScore}/30`,
+        totalRaw: `${rawTotal}/16`,
+        percentage: `${percentage.toFixed(1)}%`
       });
     }
 

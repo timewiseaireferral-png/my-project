@@ -59,6 +59,12 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
     return 'text-red-600';
   };
 
+  const getScoreColorByPercentage = (percentage: number) => {
+    if (percentage >= 75) return 'text-green-600';
+    if (percentage >= 50) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
   return (
     <div className={`space-y-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
 
@@ -154,9 +160,15 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
           <div className="flex items-center space-x-2">
             <Award className="w-5 h-5 text-blue-500" />
             <h3 className="font-semibold text-left">NSW Selective Test Criteria</h3>
-            <span className={`text-xs px-2 py-1 rounded-full ${getScoreColor(feedback.nswCriteria.overallScore)} bg-opacity-10`}>
-              Score: {feedback.nswCriteria.overallScore}/5
-            </span>
+            {feedback.nswCriteria.scoringSummary ? (
+              <span className={`text-xs px-2 py-1 rounded-full ${getScoreColorByPercentage(feedback.nswCriteria.scoringSummary.percentageScore?.score || 0)} bg-opacity-10`}>
+                {feedback.nswCriteria.scoringSummary.weightedTotal?.displayFormat || `${feedback.nswCriteria.overallScore}/30`}
+              </span>
+            ) : (
+              <span className={`text-xs px-2 py-1 rounded-full ${getScoreColor(feedback.nswCriteria.overallScore)} bg-opacity-10`}>
+                Score: {feedback.nswCriteria.overallScore}/16
+              </span>
+            )}
           </div>
           {expandedSections.has('nsw') ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </button>
@@ -171,7 +183,7 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
                   Ideas & Content
                 </h4>
                 <span className={`font-bold ${getScoreColor(feedback.nswCriteria.ideas.score)}`}>
-                  {feedback.nswCriteria.ideas.score}/5
+                  {feedback.nswCriteria.ideas.score}/4
                 </span>
               </div>
               {feedback.nswCriteria.ideas.strengths.length > 0 && (
@@ -214,7 +226,7 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
                   Structure & Organization
                 </h4>
                 <span className={`font-bold ${getScoreColor(feedback.nswCriteria.structure.score)}`}>
-                  {feedback.nswCriteria.structure.score}/5
+                  {feedback.nswCriteria.structure.score}/4
                 </span>
               </div>
               {feedback.nswCriteria.structure.strengths.map((strength, idx) => (
@@ -239,7 +251,7 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
                   Language & Vocabulary
                 </h4>
                 <span className={`font-bold ${getScoreColor(feedback.nswCriteria.language.score)}`}>
-                  {feedback.nswCriteria.language.score}/5
+                  {feedback.nswCriteria.language.score}/4
                 </span>
               </div>
               {feedback.nswCriteria.language.strengths.map((strength, idx) => (
@@ -264,7 +276,7 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
                   Spelling & Grammar
                 </h4>
                 <span className={`font-bold ${getScoreColor(feedback.nswCriteria.mechanics.score)}`}>
-                  {feedback.nswCriteria.mechanics.score}/5
+                  {feedback.nswCriteria.mechanics.score}/4
                 </span>
               </div>
               {feedback.nswCriteria.mechanics.strengths.map((strength, idx) => (
