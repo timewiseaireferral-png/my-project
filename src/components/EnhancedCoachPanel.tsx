@@ -395,7 +395,7 @@ export const EnhancedCoachPanel = ({
   selectedText,
   isFocusMode,
 }) => {
-  const [currentView, setCurrentView] = useState<'coach' | 'chat' | 'examples' | 'builder' | 'detailed' | 'grammar' | 'vocabulary' | 'sentences'>('coach');
+  const [currentView, setCurrentView] = useState<'coach' | 'chat' | 'examples' | 'builder' | 'detailed' | 'style' | 'vocabulary' | 'sentences'>('coach');
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoadingResponse, setIsLoadingResponse] = useState(false);
@@ -816,15 +816,15 @@ export const EnhancedCoachPanel = ({
 
 
           <button
-            onClick={() => setCurrentView('grammar')}
+            onClick={() => setCurrentView('style')}
             className={`flex items-center justify-center space-x-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-              currentView === 'grammar'
+              currentView === 'style'
                 ? 'bg-white text-orange-600 shadow-sm'
                 : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
             <FileCheck className="w-3 h-3" />
-            <span>Grammar</span>
+            <span>Style & Flow</span>
           </button>
 
           <button
@@ -1226,11 +1226,11 @@ export const EnhancedCoachPanel = ({
                             <div className="flex flex-wrap gap-1.5">
                               {(message.content.nswFocus.includes('Grammar') || message.content.nswFocus.includes('Spelling')) && (
                                 <button
-                                  onClick={() => setCurrentView('grammar')}
+                                  onClick={() => setCurrentView('style')}
                                   className="px-2 py-1 bg-orange-100 hover:bg-orange-200 border border-orange-300 rounded text-xs font-medium text-orange-800 transition-colors flex items-center gap-1"
                                 >
                                   <FileCheck className="w-3 h-3" />
-                                  Fix Grammar & Spelling
+                                  Review Style & Flow
                                 </button>
                               )}
                               {(message.content.nswFocus.includes('Language') || message.content.nswFocus.includes('Vocabulary')) && (
@@ -1445,7 +1445,7 @@ export const EnhancedCoachPanel = ({
             </div>
             )}
           </div>
-        ) : currentView === 'grammar' ? (
+        ) : currentView === 'style' ? (
           <GrammarCorrectionPanel
             text={content || ''}
             aiCorrections={comprehensiveFeedback?.grammarIssues}

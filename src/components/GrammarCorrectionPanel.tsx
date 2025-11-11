@@ -110,10 +110,10 @@ export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
       <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
         <div className="flex items-center justify-center space-x-3 text-green-600 dark:text-green-400">
           <CheckCircle className="w-6 h-6" />
-          <p className="font-medium dark:text-gray-200">No grammar, spelling, or punctuation errors detected!</p>
+          <p className="font-medium dark:text-gray-200">Your writing style is excellent!</p>
         </div>
         <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-2">
-          Your writing looks great! Keep up the good work.
+          No advanced style improvements detected. Your sentence flow and word choices are sophisticated!
         </p>
       </div>
     );
@@ -131,10 +131,10 @@ export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
     <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
       <div className="mb-4">
         <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-          Grammar & Spelling Corrections
+          Style & Flow
         </h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Found {visibleErrors.length} {visibleErrors.length === 1 ? 'issue' : 'issues'} that can be improved
+          Found {visibleErrors.length} {visibleErrors.length === 1 ? 'suggestion' : 'suggestions'} to enhance your writing style
         </p>
       </div>
 
