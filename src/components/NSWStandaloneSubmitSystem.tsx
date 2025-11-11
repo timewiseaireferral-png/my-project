@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface NSWStandaloneSubmitSystemProps {
   content: string;
@@ -35,10 +36,21 @@ export function NSWStandaloneSubmitSystem({
 
       console.log("NSWStandaloneSubmitSystem: Calling AI evaluation API...");
 
+      // Get auth token from Supabase session
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token;
+
+      if (!authToken) {
+        throw new Error('Not authenticated. Please log in again.');
+      }
+
       // Call AI evaluation backend
       const response = await fetch("/.netlify/functions/nsw-ai-evaluation", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`
+        },
         body: JSON.stringify({
           essayContent: content,
           textType: textType,

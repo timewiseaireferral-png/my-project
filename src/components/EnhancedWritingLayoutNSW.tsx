@@ -18,6 +18,7 @@ import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
 import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator';
 import { useTheme } from '../contexts/ThemeContext';
+import { supabase } from '../lib/supabase';
 import {
   PenTool,
   Play,
@@ -519,10 +520,21 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
       console.log('Calling AI NSW evaluation API...');
 
+      // Get auth token from Supabase session
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token;
+
+      if (!authToken) {
+        throw new Error('Not authenticated. Please log in again.');
+      }
+
       // Call AI evaluation backend
       const response = await fetch("/.netlify/functions/nsw-ai-evaluation", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`
+        },
         body: JSON.stringify({
           essayContent: localContent,
           textType: textType,
