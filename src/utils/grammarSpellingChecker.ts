@@ -178,6 +178,25 @@ const GRAMMAR_RULES = {
     }
   ],
 
+  // Verb tense errors - past tense context
+  verbTenseErrors: [
+    {
+      pattern: /\b(I|you|he|she|it|we|they)\s+was\s+confuse\b/gi,
+      message: "Verb tense error: Use 'confused' (past tense) after 'was'.",
+      suggestions: (match: string) => [match.replace(/confuse/gi, 'confused')]
+    },
+    {
+      pattern: /\b(I|you|he|she|it|we|they)\s+(look|decide|lift|walk)\s+(out|to|the|at|up|down)\b/gi,
+      message: "Check verb tense: This might need past tense (looked, decided, lifted, walked).",
+      suggestions: (match: string) => [
+        match.replace(/look\b/gi, 'looked')
+            .replace(/decide\b/gi, 'decided')
+            .replace(/lift\b/gi, 'lifted')
+            .replace(/walk\b/gi, 'walked')
+      ]
+    }
+  ],
+
   // Context-aware than/then rules
   thenThanRules: [
     {
@@ -363,7 +382,7 @@ export class GrammarSpellingChecker {
 
       // Additional common words for spelling accuracy (200+ words)
       'about', 'above', 'across', 'add', 'against', 'almost', 'alone', 'along', 'already', 'also',
-      'although', 'always', 'among', 'amount', 'another', 'answer', 'appear', 'around', 'ask', 'away',
+      'although', 'always', 'among', 'amount', 'another', 'answer', 'answered', 'appear', 'around', 'ask', 'away',
       'ball', 'base', 'beautiful', 'became', 'become', 'bed', 'behind', 'believe', 'below', 'best',
       'between', 'beyond', 'bird', 'blue', 'board', 'boat', 'both', 'bottom', 'box', 'boy',
       'break', 'bright', 'bring', 'build', 'built', 'busy', 'call', 'came', 'cannot', 'care',
@@ -430,7 +449,15 @@ export class GrammarSpellingChecker {
       'weak', 'wealth', 'wear', 'weather', 'wedding', 'weight', 'welcome', 'west', 'wheel', 'whenever',
       'while', 'white', 'wide', 'wife', 'wild', 'wind', 'winter', 'wire', 'wise', 'wish',
       'within', 'without', 'woman', 'wonder', 'wood', 'wool', 'wore', 'worth', 'would', 'wound',
-      'wrap', 'yesterday', 'young', 'youth', 'atmosphere', 'yawning', 'decided', 'together', 'towards'
+      'wrap', 'yesterday', 'young', 'youth', 'atmosphere', 'yawning', 'decided', 'together', 'towards',
+
+      // Additional common words that were missing (causing false positives)
+      'phone', 'phones', 'rang', 'ringing', 'raspy', 'stone', 'stones', 'bush', 'bushes',
+      'confused', 'confuse', 'confusing', 'lift', 'lifted', 'lifting', 'lifts', 'underneath',
+      'flat', 'dying', 'beat', 'beating', 'beats', 'adventure', 'adventures', 'adventurous',
+      'silver', 'oranges', 'purples', 'setting', 'painting', 'painted', 'decide', 'decided',
+      'deciding', 'fast', 'faster', 'fastest', 'garden', 'gardens', 'key', 'keys', 'third',
+      'strange', 'stranger', 'strangest', 'voice', 'voices', 'number', 'numbers'
     ];
     this.dictionary = new Set(commonWords);
   }

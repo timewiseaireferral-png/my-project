@@ -19,6 +19,7 @@ import { detectNewParagraphs } from '../lib/paragraphDetection';
 import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator';
 import { useTheme } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
+import { autoSaveService } from '../lib/autoSaveService';
 import {
   PenTool,
   Play,
@@ -147,6 +148,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [isLoadingPrompt, setIsLoadingPrompt] = useState(false);
   const [hidePrompt, setHidePrompt] = useState(false);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error' | null>(null);
 
   // Auto-hide prompt after 5 minutes
   useEffect(() => {
@@ -158,6 +161,39 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
     return () => clearTimeout(timer);
   }, [isPromptCollapsed]);
+
+  // Initialize auto-save service
+  useEffect(() => {
+    if (autoSaveEnabled && user?.id) {
+      console.log('Starting auto-save service...');
+      autoSaveService.startAutoSave(
+        () => localContent,
+        () => textType,
+        user.id
+      );
+    }
+
+    return () => {
+      console.log('Stopping auto-save service...');
+      autoSaveService.stopAutoSave();
+    };
+  }, [autoSaveEnabled, user, textType]);
+
+  // Load saved draft on mount
+  useEffect(() => {
+    const loadDraft = async () => {
+      if (user?.id && !localContent) {
+        console.log('Loading draft...');
+        const draft = await autoSaveService.loadDraft(user.id);
+        if (draft && draft.content) {
+          setLocalContent(draft.content);
+          if (onChange) onChange(draft.content);
+          console.log('Draft loaded:', draft.wordCount, 'words');
+        }
+      }
+    };
+    loadDraft();
+  }, [user]);
   
   // New states for missing functionality
   const [showPlanningTool, setShowPlanningTool] = useState(false);
@@ -271,6 +307,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       if (onChangeRef.current && localContent !== previousContentRef.current) {
         onChangeRef.current(localContent);
         setLastSaved(new Date());
+        setSaveStatus('saved');
       }
     }, 500);
     return () => clearTimeout(timer);
@@ -802,6 +839,11 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               }`}>
                 {currentWordCount} {currentWordCount === 1 ? 'word' : 'words'}
               </span>
+              {lastSaved && (
+                <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  • Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
             </div>
 
             {/* Pacing Indicator */}
