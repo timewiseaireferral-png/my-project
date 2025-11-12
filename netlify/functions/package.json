@@ -4,6 +4,7 @@
   "description": "Netlify Functions for NSW Writing Buddy",
   "main": "index.js",
   "dependencies": {
-    "openai": "^4.67.3"
+    "openai": "^4.67.3",
+    "languagetool-api": "^1.1.0"
   }
 }
