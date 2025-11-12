@@ -395,7 +395,11 @@ export const EnhancedCoachPanel = ({
   onChange,
   selectedText,
   isFocusMode,
-}) => {
+  detectedErrors = [],
+  highlightedErrorId = null,
+  onErrorClick,
+  onDismissError,
+}: any) => {
   const [currentView, setCurrentView] = useState<'coach' | 'chat' | 'examples' | 'builder' | 'detailed' | 'style' | 'vocabulary' | 'sentences'>('coach');
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -1449,6 +1453,11 @@ export const EnhancedCoachPanel = ({
             text={content || ''}
             aiCorrections={comprehensiveFeedback?.grammarIssues}
             onApplyCorrection={onApplyFix}
+            detectedErrors={detectedErrors}
+            highlightedErrorId={highlightedErrorId}
+            onErrorClick={onErrorClick}
+            onDismissError={onDismissError}
+            darkMode={darkMode}
           />
         ) : currentView === 'vocabulary' ? (
           <div className="p-3 overflow-y-auto h-full">

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AlertCircle, CheckCircle, Lightbulb, X } from 'lucide-react';
 import { grammarSpellingChecker, GrammarError } from '../utils/grammarSpellingChecker';
+import { TextError } from '../lib/realtimeErrorDetection';
+import { eventBus } from '../lib/eventBus';
 
 interface AIGrammarCorrection {
   original: string;
@@ -13,24 +15,53 @@ interface GrammarCorrectionPanelProps {
   text: string;
   aiCorrections?: AIGrammarCorrection[];
   onApplyCorrection?: (start: number, end: number, correction: string) => void;
+  detectedErrors?: TextError[];
+  highlightedErrorId?: string | null;
+  onErrorClick?: (error: TextError) => void;
+  onDismissError?: (errorId: string) => void;
+  darkMode?: boolean;
 }
 
 export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
   text,
   aiCorrections,
-  onApplyCorrection
+  onApplyCorrection,
+  detectedErrors = [],
+  highlightedErrorId = null,
+  onErrorClick,
+  onDismissError,
+  darkMode = false
 }) => {
+  const errorRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [errors, setErrors] = useState<GrammarError[]>([]);
   const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(new Set());
   const [selectedError, setSelectedError] = useState<GrammarError | null>(null);
 
+  // Auto-scroll to highlighted error
+  useEffect(() => {
+    if (highlightedErrorId && errorRefs.current[highlightedErrorId]) {
+      const element = errorRefs.current[highlightedErrorId];
+      element?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+  }, [highlightedErrorId]);
+
+  // Use detected errors from inline highlighter if available, otherwise fall back
   useEffect(() => {
     if (!text || text.trim().length === 0) {
       setErrors([]);
       return;
     }
 
-    // Prioritize AI corrections if available
+    // Priority 1: Real-time detected errors from inline highlighter
+    if (detectedErrors && detectedErrors.length > 0) {
+      // No need to convert, just use the detectedErrors
+      return;
+    }
+
+    // Priority 2: AI corrections if available
     if (aiCorrections && aiCorrections.length > 0) {
       const aiErrors: GrammarError[] = aiCorrections.map(correction => ({
         type: 'grammar',
@@ -43,11 +74,11 @@ export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
       }));
       setErrors(aiErrors);
     } else {
-      // Fall back to hardcoded checker if no AI corrections available
-      const detectedErrors = grammarSpellingChecker.checkText(text);
-      setErrors(detectedErrors);
+      // Priority 3: Fall back to hardcoded checker
+      const localDetectedErrors = grammarSpellingChecker.checkText(text);
+      setErrors(localDetectedErrors);
     }
-  }, [text, aiCorrections]);
+  }, [text, aiCorrections, detectedErrors]);
 
   const handleApplyCorrection = (error: GrammarError, suggestion: string) => {
     if (onApplyCorrection) {
@@ -105,7 +136,19 @@ export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
     return text.substring(error.start, error.end);
   };
 
-  if (visibleErrors.length === 0) {
+  // Handle click on real-time detected error
+  const handleDetectedErrorClick = (error: TextError) => {
+    if (onErrorClick) {
+      onErrorClick(error);
+      // Also emit event to editor
+      eventBus.emit('errorClickedInSidebar', error);
+    }
+  };
+
+  // Use real-time detected errors if available
+  const displayErrors = detectedErrors && detectedErrors.length > 0 ? detectedErrors : null;
+
+  if ((!displayErrors || displayErrors.length === 0) && visibleErrors.length === 0) {
     return (
       <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
         <div className="flex items-center justify-center space-x-3 text-green-600 dark:text-green-400">
@@ -115,6 +158,210 @@ export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
         <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-2">
           No advanced style improvements detected. Your sentence flow and word choices are sophisticated!
         </p>
+      </div>
+    );
+  }
+
+  // If we have real-time detected errors, render them with bidirectional linking
+  if (displayErrors && displayErrors.length > 0) {
+    const spellingErrors = displayErrors.filter(e => e.category === 'spelling');
+    const grammarErrors = displayErrors.filter(e => e.category === 'grammar');
+    const styleErrors = displayErrors.filter(e => e.category === 'style');
+
+    return (
+      <div className="h-full flex flex-col bg-white dark:bg-slate-800">
+        <div className="p-4 border-b border-gray-200 dark:border-slate-700">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+            Style & Flow
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Found {displayErrors.length} {displayErrors.length === 1 ? 'suggestion' : 'suggestions'}
+          </p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {/* Spelling Errors */}
+          {spellingErrors.length > 0 && (
+            <div>
+              <h4 className="text-sm font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                Spelling ({spellingErrors.length})
+              </h4>
+              <div className="space-y-2">
+                {spellingErrors.map(error => (
+                  <div
+                    key={error.id}
+                    ref={(el) => errorRefs.current[error.id] = el}
+                    onClick={() => handleDetectedErrorClick(error)}
+                    className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                      highlightedErrorId === error.id
+                        ? 'ring-2 ring-blue-500 bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-600 scale-105 shadow-lg'
+                        : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 hover:shadow-md hover:scale-102'
+                    }`}
+                    style={{
+                      animation: highlightedErrorId === error.id ? 'pulse-card 1s ease-in-out 2' : 'none'
+                    }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-xs font-mono bg-white dark:bg-slate-700 px-2 py-1 rounded border border-red-300 dark:border-red-700 mb-2 inline-block">
+                          "{error.text}"
+                        </p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{error.message}</p>
+                        {error.suggestion && (
+                          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded px-2 py-1">
+                            <p className="text-xs text-green-700 dark:text-green-300">
+                              <strong>Suggestion:</strong> {error.suggestion}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onDismissError) onDismissError(error.id);
+                        }}
+                        className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">
+                      Click to highlight in editor
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Grammar Errors */}
+          {grammarErrors.length > 0 && (
+            <div>
+              <h4 className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                Grammar & Mechanics ({grammarErrors.length})
+              </h4>
+              <div className="space-y-2">
+                {grammarErrors.map(error => (
+                  <div
+                    key={error.id}
+                    ref={(el) => errorRefs.current[error.id] = el}
+                    onClick={() => handleDetectedErrorClick(error)}
+                    className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                      highlightedErrorId === error.id
+                        ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20 border-blue-400 dark:border-blue-600 scale-105 shadow-lg'
+                        : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:shadow-md hover:scale-102'
+                    }`}
+                    style={{
+                      animation: highlightedErrorId === error.id ? 'pulse-card 1s ease-in-out 2' : 'none'
+                    }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-xs font-mono bg-white dark:bg-slate-700 px-2 py-1 rounded border border-blue-300 dark:border-blue-700 mb-2 inline-block">
+                          "{error.text}"
+                        </p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{error.message}</p>
+                        {error.suggestion && (
+                          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded px-2 py-1">
+                            <p className="text-xs text-green-700 dark:text-green-300">
+                              <strong>Suggestion:</strong> {error.suggestion}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onDismissError) onDismissError(error.id);
+                        }}
+                        className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">
+                      Click to highlight in editor
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Style Suggestions */}
+          {styleErrors.length > 0 && (
+            <div>
+              <h4 className="text-sm font-bold text-orange-600 dark:text-orange-400 mb-2 flex items-center gap-2">
+                <Lightbulb className="w-4 h-4" />
+                Style & Clarity ({styleErrors.length})
+              </h4>
+              <div className="space-y-2">
+                {styleErrors.map(error => (
+                  <div
+                    key={error.id}
+                    ref={(el) => errorRefs.current[error.id] = el}
+                    onClick={() => handleDetectedErrorClick(error)}
+                    className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                      highlightedErrorId === error.id
+                        ? 'ring-2 ring-blue-500 bg-orange-50 dark:bg-orange-900/20 border-orange-400 dark:border-orange-600 scale-105 shadow-lg'
+                        : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 hover:shadow-md hover:scale-102'
+                    }`}
+                    style={{
+                      animation: highlightedErrorId === error.id ? 'pulse-card 1s ease-in-out 2' : 'none'
+                    }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-xs font-mono bg-white dark:bg-slate-700 px-2 py-1 rounded border border-orange-300 dark:border-orange-700 mb-2 inline-block">
+                          "{error.text}"
+                        </p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{error.message}</p>
+                        {error.suggestion && (
+                          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded px-2 py-1">
+                            <p className="text-xs text-green-700 dark:text-green-300">
+                              <strong>Suggestion:</strong> {error.suggestion}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onDismissError) onDismissError(error.id);
+                        }}
+                        className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">
+                      Click to highlight in editor
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <style>{`
+          @keyframes pulse-card {
+            0%, 100% {
+              transform: scale(1);
+              opacity: 1;
+            }
+            50% {
+              transform: scale(1.03);
+              opacity: 0.95;
+            }
+          }
+
+          .hover\\:scale-102:hover {
+            transform: scale(1.02);
+          }
+        `}</style>
       </div>
     );
   }

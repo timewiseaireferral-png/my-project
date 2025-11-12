@@ -11,6 +11,8 @@ import { AIEvaluationReportDisplay } from './AIEvaluationReportDisplay';
 import { NSWSubmitButton } from './NSWSubmitButton';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { InlineTextHighlighter } from './InlineTextHighlighter';
+import { InlineErrorHighlighter } from './InlineErrorHighlighter';
+import { TextError } from '../lib/realtimeErrorDetection';
 import { generatePrompt } from '../lib/openai';
 import { promptConfig } from '../config/prompts';
 import type { DetailedFeedback, LintFix } from '../types/feedback';
@@ -204,8 +206,13 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [expandedGrammarStats, setExpandedGrammarStats] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
+  // Real-time error highlighting state
+  const [detectedErrors, setDetectedErrors] = useState<TextError[]>([]);
+  const [highlightedErrorId, setHighlightedErrorId] = useState<string | null>(null);
+  const [dismissedErrors, setDismissedErrors] = useState<Set<string>>(new Set());
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const highlightContainerRef = useRef<HTMLDivElement>(null);
   const previousContentRef = useRef<string>(content);
   const onChangeRef = useRef(onChange);
 
@@ -440,6 +447,68 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       }
     }
   }, [content, isTimerRunning, elapsedTime, onStartTimer, textType]);
+
+  // Handle errors detected by inline highlighter
+  const handleErrorsDetected = useCallback((errors: TextError[]) => {
+    const filteredErrors = errors.filter(error => !dismissedErrors.has(error.id));
+    setDetectedErrors(filteredErrors);
+  }, [dismissedErrors]);
+
+  // Handle error click from inline highlighter (Editor → Sidebar)
+  const handleErrorClickFromEditor = useCallback((error: TextError) => {
+    setHighlightedErrorId(error.id);
+    // Emit event to sidebar to scroll to this error
+    eventBus.emit('errorClickedInEditor', error);
+    // Clear highlight after 2 seconds
+    setTimeout(() => setHighlightedErrorId(null), 2000);
+  }, []);
+
+  // Handle error click from sidebar (Sidebar → Editor)
+  const handleErrorClickFromSidebar = useCallback((error: TextError) => {
+    setHighlightedErrorId(error.id);
+
+    // Scroll editor to error position
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      textarea.focus();
+      textarea.setSelectionRange(error.startIndex, error.endIndex);
+
+      // Calculate scroll position
+      const lineHeight = 24;
+      const lines = localContent.substring(0, error.startIndex).split('\n').length;
+      const scrollPosition = (lines - 1) * lineHeight;
+      textarea.scrollTop = Math.max(0, scrollPosition - textarea.clientHeight / 2);
+    }
+
+    // Clear highlight after 2 seconds
+    setTimeout(() => setHighlightedErrorId(null), 2000);
+  }, [localContent]);
+
+  // Handle error dismissal
+  const handleDismissError = useCallback((errorId: string) => {
+    setDismissedErrors(prev => new Set([...prev, errorId]));
+    setDetectedErrors(prev => prev.filter(e => e.id !== errorId));
+  }, []);
+
+  // Sync scroll between textarea and highlight layer
+  const handleScroll = useCallback(() => {
+    if (textareaRef.current && highlightContainerRef.current) {
+      highlightContainerRef.current.scrollTop = textareaRef.current.scrollTop;
+      highlightContainerRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    }
+  }, []);
+
+  // Listen for sidebar error clicks
+  useEffect(() => {
+    const handleSidebarErrorClick = (error: TextError) => {
+      handleErrorClickFromSidebar(error);
+    };
+
+    eventBus.on('errorClickedInSidebar', handleSidebarErrorClick);
+    return () => {
+      eventBus.off('errorClickedInSidebar', handleSidebarErrorClick);
+    };
+  }, [handleErrorClickFromSidebar]);
 
   // Convert NSW report format to DetailedFeedback format
   const convertNSWReportToDetailedFeedback = (report: any): any => {
@@ -1015,16 +1084,48 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         {/* Writing Area - Takes remaining space */}
         <div className="flex-1 overflow-y-auto p-3">
           <div className="relative h-full">
+            {/* Highlight Layer (Behind textarea) */}
+            <div
+              ref={highlightContainerRef}
+              className="absolute inset-0 pointer-events-none overflow-hidden"
+              style={{
+                padding: '16px',
+                fontFamily,
+                fontSize: `${fontSize}px`,
+                lineHeight: lineHeight.toString(),
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                color: 'transparent',
+                zIndex: 1
+              }}
+            >
+              <InlineErrorHighlighter
+                text={localContent}
+                onErrorsDetected={handleErrorsDetected}
+                onErrorClick={handleErrorClickFromEditor}
+                highlightedErrorId={highlightedErrorId}
+                darkMode={darkMode}
+              />
+            </div>
+
+            {/* Textarea (On Top of highlights) */}
             <textarea
               ref={textareaRef}
               value={localContent}
               onChange={(e) => handleContentChange(e.target.value)}
-              className={`w-full h-full resize-none p-4 rounded-xl shadow-lg transition-all duration-300 text-base leading-relaxed focus:outline-none ${
+              onScroll={handleScroll}
+              className={`relative w-full h-full resize-none p-4 rounded-xl shadow-lg transition-all duration-300 text-base leading-relaxed focus:outline-none ${
                 darkMode
-                  ? 'bg-slate-900 text-gray-100 placeholder-gray-500 border-2 border-slate-700 focus:border-cyan-500 focus:shadow-cyan-500/20'
-                  : 'bg-white text-gray-800 placeholder-gray-400 border-2 border-gray-200 focus:border-blue-500 focus:shadow-blue-500/20'
+                  ? 'bg-slate-900/90 text-gray-100 placeholder-gray-500 border-2 border-slate-700 focus:border-cyan-500 focus:shadow-cyan-500/20'
+                  : 'bg-white/90 text-gray-800 placeholder-gray-400 border-2 border-gray-200 focus:border-blue-500 focus:shadow-blue-500/20'
               }`}
-              style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight: lineHeight.toString() }}
+              style={{
+                fontFamily,
+                fontSize: `${fontSize}px`,
+                lineHeight: lineHeight.toString(),
+                zIndex: 2,
+                background: darkMode ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)'
+              }}
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
             />
 
@@ -1074,6 +1175,10 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           }}
           selectedText={selectedText}
           isFocusMode={false}
+          detectedErrors={detectedErrors}
+          highlightedErrorId={highlightedErrorId}
+          onErrorClick={handleErrorClickFromSidebar}
+          onDismissError={handleDismissError}
         />
         </div>
       )}
