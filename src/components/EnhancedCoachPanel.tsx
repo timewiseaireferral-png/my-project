@@ -6,6 +6,7 @@ import { ComprehensiveFeedbackDisplay } from './ComprehensiveFeedbackDisplay';
 import { GrammarCorrectionPanel } from './GrammarCorrectionPanel';
 import { VocabularyEnhancementPanel } from './VocabularyEnhancementPanel';
 import { SentenceStructurePanel } from './SentenceStructurePanel';
+import { RealtimeNSWScoreDisplay } from './RealtimeNSWScoreDisplay';
 import { generateIntelligentResponse, type EnhancedCoachResponse } from '../lib/enhancedIntelligentResponseGenerator';
 import { ComprehensiveFeedbackAnalyzer } from '../lib/comprehensiveFeedbackAnalyzer';
 import { generateDynamicExamples, formatExamplesForDisplay } from '../lib/dynamicExampleGenerator';
@@ -1420,29 +1421,27 @@ export const EnhancedCoachPanel = ({
           </div>
         ) : currentView === 'detailed' ? (
           <div className="overflow-y-auto h-full">
-            {comprehensiveFeedback ? (
-              <ComprehensiveFeedbackDisplay
-                feedback={comprehensiveFeedback}
-                darkMode={darkMode}
-                onApplyFix={onApplyFix}
-              />
-            ) : (
-            <div className="p-6 text-center">
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-                <BookOpen className="w-12 h-12 text-blue-500 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Start Writing to See Detailed Feedback</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  Once you start writing, you'll see comprehensive feedback on:
-                </p>
-                <ul className="text-left inline-block text-sm text-gray-700 dark:text-gray-300 space-y-2">
-                  <li>✓ Grammar and spelling</li>
-                  <li>✓ NSW marking criteria scores</li>
-                  <li>✓ Story structure and pacing</li>
-                  <li>✓ Vocabulary sophistication</li>
-                  <li>✓ Sentence variety</li>
-                </ul>
+            {/* Real-time NSW Score Display - Always Visible */}
+            <RealtimeNSWScoreDisplay
+              content={content}
+              textType={textType}
+              darkMode={darkMode}
+            />
+
+            {/* Comprehensive Feedback - Shows after analysis */}
+            {comprehensiveFeedback && (
+              <div className="mt-4">
+                <div className={`px-4 py-2 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                  <h3 className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Detailed Feedback
+                  </h3>
+                </div>
+                <ComprehensiveFeedbackDisplay
+                  feedback={comprehensiveFeedback}
+                  darkMode={darkMode}
+                  onApplyFix={onApplyFix}
+                />
               </div>
-            </div>
             )}
           </div>
         ) : currentView === 'style' ? (
