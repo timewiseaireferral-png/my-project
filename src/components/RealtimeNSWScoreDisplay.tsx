@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { TrendingUp, TrendingDown, Award, Target, BarChart3, Zap } from 'lucide-react';
 import {
   calculateRealtimeNSWScore,
   compareScores,
   getScoreFeedback,
-  debounceScoring,
   type RealtimeNSWScore,
   type ScoreChange
 } from '../lib/realtimeNSWScoring';
@@ -23,48 +22,66 @@ export const RealtimeNSWScoreDisplay: React.FC<RealtimeNSWScoreDisplayProps> = (
   onScoreUpdate
 }) => {
   const [currentScore, setCurrentScore] = useState<RealtimeNSWScore | null>(null);
-  const [previousScore, setPreviousScore] = useState<RealtimeNSWScore | null>(null);
   const [recentChanges, setRecentChanges] = useState<ScoreChange[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [showChangeAnimation, setShowChangeAnimation] = useState(false);
 
-  // Debounced score calculation
-  const calculateScore = useCallback(
-    debounceScoring((text: string) => {
-      if (text.trim().length === 0) {
-        setCurrentScore(null);
-        setPreviousScore(null);
-        return;
-      }
+  // Use ref to track previous score without causing re-renders
+  const previousScoreRef = useRef<RealtimeNSWScore | null>(null);
+  const onScoreUpdateRef = useRef(onScoreUpdate);
 
-      setIsCalculating(true);
-
-      const newScore = calculateRealtimeNSWScore(text, textType);
-
-      if (currentScore) {
-        const changes = compareScores(currentScore, newScore);
-        if (changes.length > 0) {
-          setRecentChanges(changes);
-          setShowChangeAnimation(true);
-          setTimeout(() => setShowChangeAnimation(false), 2000);
-        }
-        setPreviousScore(currentScore);
-      }
-
-      setCurrentScore(newScore);
-      setIsCalculating(false);
-
-      if (onScoreUpdate) {
-        onScoreUpdate(newScore);
-      }
-    }, 1000), // 1 second debounce
-    [currentScore, textType, onScoreUpdate]
-  );
+  // Keep onScoreUpdate ref up to date
+  useEffect(() => {
+    onScoreUpdateRef.current = onScoreUpdate;
+  }, [onScoreUpdate]);
 
   // Calculate score when content changes
   useEffect(() => {
-    calculateScore(content);
-  }, [content, calculateScore]);
+    // Handle empty content
+    if (!content || content.trim().length === 0) {
+      setCurrentScore(null);
+      previousScoreRef.current = null;
+      setIsCalculating(false);
+      return;
+    }
+
+    setIsCalculating(true);
+
+    // Debounce the calculation
+    const timeoutId = setTimeout(() => {
+      try {
+        const newScore = calculateRealtimeNSWScore(content, textType);
+
+        // Compare with previous score for changes
+        if (previousScoreRef.current) {
+          const changes = compareScores(previousScoreRef.current, newScore);
+          if (changes.length > 0) {
+            setRecentChanges(changes);
+            setShowChangeAnimation(true);
+            setTimeout(() => setShowChangeAnimation(false), 2000);
+          }
+        }
+
+        // Save current as previous and set new score
+        previousScoreRef.current = newScore;
+        setCurrentScore(newScore);
+        setIsCalculating(false);
+
+        // Call callback if provided
+        if (onScoreUpdateRef.current) {
+          onScoreUpdateRef.current(newScore);
+        }
+      } catch (error) {
+        console.error('Error calculating NSW score:', error);
+        setIsCalculating(false);
+      }
+    }, 1000); // 1 second debounce
+
+    return () => {
+      clearTimeout(timeoutId);
+      setIsCalculating(false);
+    };
+  }, [content, textType]); // Only depend on content and textType
 
   if (!currentScore) {
     return (
