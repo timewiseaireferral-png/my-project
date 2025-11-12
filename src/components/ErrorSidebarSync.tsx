@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { AlertCircle, Lightbulb, BookOpen, X } from 'lucide-react';
-import { TextError, groupErrorsByCategory } from '../lib/realtimeErrorDetection';
+import { AlertCircle, Lightbulb, BookOpen, X, Check } from 'lucide-react';
+import { TextError, getCategoryLabel } from '../lib/realtimeErrorDetection';
 
 interface ErrorSidebarSyncProps {
   errors: TextError[];
@@ -22,9 +22,7 @@ export const ErrorSidebarSync: React.FC<ErrorSidebarSyncProps> = ({
   onTabChange
 }) => {
   const errorRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  const groupedErrors = groupErrorsByCategory(errors);
 
-  // Scroll to highlighted error when it changes
   useEffect(() => {
     if (highlightedErrorId && errorRefs.current[highlightedErrorId]) {
       const element = errorRefs.current[highlightedErrorId];
@@ -60,19 +58,6 @@ export const ErrorSidebarSync: React.FC<ErrorSidebarSyncProps> = ({
         return 'orange';
       default:
         return 'gray';
-    }
-  };
-
-  const getCategoryLabel = (category: string) => {
-    switch (category) {
-      case 'spelling':
-        return 'Spelling Error';
-      case 'grammar':
-        return 'Grammar Issue';
-      case 'style':
-        return 'Style Suggestion';
-      default:
-        return 'Issue';
     }
   };
 
@@ -114,7 +99,7 @@ export const ErrorSidebarSync: React.FC<ErrorSidebarSyncProps> = ({
         key={error.id}
         ref={(el) => errorRefs.current[error.id] = el}
         className={`border-2 rounded-lg p-4 mb-3 cursor-pointer transition-all duration-300 ${colors.bg} ${colors.border} ${colors.hover} ${
-          isHighlighted ? 'error-card-pulse ring-2 ring-blue-500' : ''
+          isHighlighted ? 'error-card-pulse ring-2 ring-blue-500 shadow-lg' : ''
         }`}
         onClick={() => onErrorClick(error)}
       >
@@ -125,7 +110,7 @@ export const ErrorSidebarSync: React.FC<ErrorSidebarSyncProps> = ({
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className={`text-xs font-bold ${colors.text} uppercase`}>
+                <span className={`text-xs font-bold ${colors.text} uppercase tracking-wider`}>
                   {getCategoryLabel(error.category)}
                 </span>
               </div>
@@ -143,6 +128,9 @@ export const ErrorSidebarSync: React.FC<ErrorSidebarSyncProps> = ({
                   </span>
                 </div>
               )}
+              <div className={`text-xs mt-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'} italic`}>
+                Click to highlight in editor
+              </div>
             </div>
           </div>
           <button
@@ -160,23 +148,22 @@ export const ErrorSidebarSync: React.FC<ErrorSidebarSyncProps> = ({
     );
   };
 
-  const mechanicsErrors = [...groupedErrors.spelling, ...groupedErrors.grammar];
-  const styleErrors = groupedErrors.style;
+  const mechanicsErrors = errors.filter(e => e.category === 'spelling' || e.category === 'grammar');
+  const styleErrors = errors.filter(e => e.category === 'style');
 
   return (
-    <div className={`error-sidebar ${darkMode ? 'dark' : ''}`}>
-      {/* Tabs */}
-      <div className={`flex border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} mb-4`}>
+    <div className={`error-sidebar h-full flex flex-col ${darkMode ? 'dark' : ''}`}>
+      <div className={`flex border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
         <button
           onClick={() => onTabChange?.('mechanics')}
           className={`flex-1 py-3 px-4 text-sm font-semibold transition-colors ${
             activeTab === 'mechanics'
               ? darkMode
-                ? 'border-b-2 border-blue-500 text-blue-400'
-                : 'border-b-2 border-blue-600 text-blue-600'
+                ? 'border-b-2 border-blue-500 text-blue-400 bg-gray-800'
+                : 'border-b-2 border-blue-600 text-blue-600 bg-blue-50'
               : darkMode
-              ? 'text-gray-400 hover:text-gray-300'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-800'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
         >
           <div className="flex items-center justify-center gap-2">
@@ -196,11 +183,11 @@ export const ErrorSidebarSync: React.FC<ErrorSidebarSyncProps> = ({
           className={`flex-1 py-3 px-4 text-sm font-semibold transition-colors ${
             activeTab === 'style'
               ? darkMode
-                ? 'border-b-2 border-orange-500 text-orange-400'
-                : 'border-b-2 border-orange-600 text-orange-600'
+                ? 'border-b-2 border-orange-500 text-orange-400 bg-gray-800'
+                : 'border-b-2 border-orange-600 text-orange-600 bg-orange-50'
               : darkMode
-              ? 'text-gray-400 hover:text-gray-300'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-800'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
         >
           <div className="flex items-center justify-center gap-2">
@@ -217,15 +204,14 @@ export const ErrorSidebarSync: React.FC<ErrorSidebarSyncProps> = ({
         </button>
       </div>
 
-      {/* Content */}
-      <div className="error-list" style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+      <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'mechanics' && (
           <div>
             {mechanicsErrors.length === 0 ? (
-              <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">No spelling or grammar issues detected!</p>
-                <p className="text-xs mt-1">Great job!</p>
+              <div className={`text-center py-12 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <Check className="w-16 h-16 mx-auto mb-4 text-green-500" />
+                <p className="text-lg font-medium mb-2">No mechanics issues!</p>
+                <p className="text-sm">Your spelling and grammar look great.</p>
               </div>
             ) : (
               mechanicsErrors.map(error => renderErrorCard(error))
@@ -236,10 +222,10 @@ export const ErrorSidebarSync: React.FC<ErrorSidebarSyncProps> = ({
         {activeTab === 'style' && (
           <div>
             {styleErrors.length === 0 ? (
-              <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                <Lightbulb className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">No style suggestions at the moment!</p>
-                <p className="text-xs mt-1">Your writing flows well!</p>
+              <div className={`text-center py-12 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <Check className="w-16 h-16 mx-auto mb-4 text-green-500" />
+                <p className="text-lg font-medium mb-2">No style suggestions!</p>
+                <p className="text-sm">Your writing flows well.</p>
               </div>
             ) : (
               styleErrors.map(error => renderErrorCard(error))
@@ -250,33 +236,35 @@ export const ErrorSidebarSync: React.FC<ErrorSidebarSyncProps> = ({
 
       <style>{`
         .error-card-pulse {
-          animation: card-pulse 1s ease-in-out;
+          animation: card-pulse 1s ease-in-out 2;
         }
 
         @keyframes card-pulse {
           0%, 100% {
             transform: scale(1);
+            opacity: 1;
           }
           50% {
-            transform: scale(1.02);
+            transform: scale(1.03);
+            opacity: 0.95;
           }
         }
 
-        .error-sidebar .error-list::-webkit-scrollbar {
+        .error-sidebar .overflow-y-auto::-webkit-scrollbar {
           width: 8px;
         }
 
-        .error-sidebar .error-list::-webkit-scrollbar-track {
+        .error-sidebar .overflow-y-auto::-webkit-scrollbar-track {
           background: ${darkMode ? '#1f2937' : '#f3f4f6'};
           border-radius: 4px;
         }
 
-        .error-sidebar .error-list::-webkit-scrollbar-thumb {
+        .error-sidebar .overflow-y-auto::-webkit-scrollbar-thumb {
           background: ${darkMode ? '#4b5563' : '#d1d5db'};
           border-radius: 4px;
         }
 
-        .error-sidebar .error-list::-webkit-scrollbar-thumb:hover {
+        .error-sidebar .overflow-y-auto::-webkit-scrollbar-thumb:hover {
           background: ${darkMode ? '#6b7280' : '#9ca3af'};
         }
       `}</style>

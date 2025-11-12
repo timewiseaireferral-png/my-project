@@ -20,6 +20,7 @@ export interface ErrorHighlight {
   error: TextError;
   color: string;
   underlineStyle: string;
+  className: string;
 }
 
 // Common spelling errors for quick detection
@@ -49,48 +50,55 @@ const COMMON_MISSPELLINGS: { [key: string]: string } = {
 // Grammar patterns to detect
 const GRAMMAR_PATTERNS = [
   {
-    pattern: /\b(\w+s)\s+(is|was|has)\b/gi,
-    message: 'Possible subject-verb agreement error',
-    check: (match: string) => {
+    pattern: /\b(dogs|cats|books|students|teachers)\s+(runs|goes|has|was|is)\b/gi,
+    message: 'Subject-verb agreement error. Plural subjects need plural verbs.',
+    suggestion: (match: string) => {
       const parts = match.split(/\s+/);
-      const subject = parts[0].toLowerCase();
-      return subject.endsWith('s') && !['is', 'was', 'has'].includes(subject);
+      const verb = parts[1].toLowerCase();
+      const verbMap: { [key: string]: string } = {
+        'runs': 'run',
+        'goes': 'go',
+        'has': 'have',
+        'was': 'were',
+        'is': 'are'
+      };
+      return `${parts[0]} ${verbMap[verb] || verb}`;
     }
   },
   {
     pattern: /\b(don't|doesn't|didn't)\s+(\w+)/gi,
     message: 'Check subject-verb agreement with negatives',
-    check: (match: string) => true
+    suggestion: null
   },
   {
     pattern: /\bthan\s+then\b|\bthen\s+than\b/gi,
     message: 'Confused "than" and "then"',
-    check: () => true
+    suggestion: null
   },
   {
-    pattern: /\byour\s+going\b|\byour\s+coming\b/gi,
+    pattern: /\byour\s+(going|coming|being)\b/gi,
     message: 'Should be "you\'re" (you are)',
-    check: () => true
+    suggestion: (match: string) => match.replace('your', "you're")
   },
   {
     pattern: /\bits\s+a\b/gi,
     message: 'Possible missing apostrophe: "it\'s" means "it is"',
-    check: () => true
+    suggestion: null
   },
   {
     pattern: /[a-z]\s+,/g,
     message: 'Space before comma - remove the space',
-    check: () => true
+    suggestion: null
   },
   {
     pattern: /,[A-Z]/g,
     message: 'Missing space after comma',
-    check: () => true
+    suggestion: null
   },
   {
     pattern: /\.\./g,
     message: 'Multiple periods - use one period or ellipsis (...)',
-    check: () => true
+    suggestion: null
   },
 ];
 
@@ -98,120 +106,165 @@ const GRAMMAR_PATTERNS = [
 const STYLE_PATTERNS = [
   {
     pattern: /\b(very|really|quite|just|actually|basically|literally)\s+/gi,
-    message: 'Consider removing filler word for stronger writing',
-    type: 'wordiness'
+    message: 'Consider removing weak intensifiers for stronger writing',
+    suggestion: null
   },
   {
-    pattern: /\b(was|were|is|are|been)\s+(\w+ed|being)\b/gi,
-    message: 'Passive voice detected - consider active voice',
-    type: 'passive'
-  },
-  {
-    pattern: /\b(a lot of|lots of)\b/gi,
-    message: 'Informal phrase - consider "many" or "numerous"',
-    type: 'informal'
+    pattern: /\b(thing|stuff|something|things)\b/gi,
+    message: 'Replace vague words with specific nouns',
+    suggestion: null
   },
   {
     pattern: /\b(good|bad|nice|big|small)\b/gi,
-    message: 'Simple adjective - consider more descriptive word',
-    type: 'vocabulary'
-  },
-  {
-    pattern: /\b(thing|stuff|things|stuffs)\b/gi,
-    message: 'Vague noun - be more specific',
-    type: 'clarity'
+    message: 'Use more descriptive adjectives',
+    suggestion: null
   },
   {
     pattern: /\b(got|get|gets|getting)\b/gi,
-    message: 'Weak verb - consider more precise alternative',
-    type: 'vocabulary'
+    message: 'Consider using more specific verbs',
+    suggestion: null
   },
 ];
 
 /**
- * Detect spelling errors in text
+ * Get error style configuration based on category
  */
-export function detectSpellingErrors(text: string): TextError[] {
+export function getErrorStyle(category: ErrorCategory): ErrorHighlight['color'] & { className: string; underlineStyle: string; color: string } {
+  switch (category) {
+    case 'spelling':
+      return {
+        color: '#ef4444', // Red
+        underlineStyle: 'wavy',
+        className: 'error-spelling'
+      };
+    case 'grammar':
+      return {
+        color: '#3b82f6', // Blue
+        underlineStyle: 'wavy',
+        className: 'error-grammar'
+      };
+    case 'style':
+      return {
+        color: '#f97316', // Orange
+        underlineStyle: 'dotted',
+        className: 'error-style'
+      };
+    default:
+      return {
+        color: '#6b7280', // Gray
+        underlineStyle: 'solid',
+        className: 'error-unknown'
+      };
+  }
+}
+
+/**
+ * Generate unique ID for error
+ */
+function generateErrorId(category: ErrorCategory, startIndex: number, endIndex: number): string {
+  return `${category}-${startIndex}-${endIndex}-${Date.now()}`;
+}
+
+/**
+ * Analyze text for spelling errors
+ */
+function detectSpellingErrors(text: string): TextError[] {
   const errors: TextError[] = [];
-  const words = text.matchAll(/\b[a-zA-Z]+\b/g);
+  const words = text.match(/\b\w+\b/g) || [];
+  let currentIndex = 0;
 
-  for (const match of words) {
-    const word = match[0].toLowerCase();
-    const startIndex = match.index!;
+  words.forEach(word => {
+    const wordIndex = text.indexOf(word, currentIndex);
+    const lowerWord = word.toLowerCase();
 
-    if (COMMON_MISSPELLINGS[word]) {
+    if (COMMON_MISSPELLINGS[lowerWord]) {
       errors.push({
-        id: `spell-${startIndex}`,
+        id: generateErrorId('spelling', wordIndex, wordIndex + word.length),
         category: 'spelling',
-        startIndex,
-        endIndex: startIndex + match[0].length,
-        text: match[0],
-        message: `Spelling error: Did you mean "${COMMON_MISSPELLINGS[word]}"?`,
-        suggestion: COMMON_MISSPELLINGS[word],
+        startIndex: wordIndex,
+        endIndex: wordIndex + word.length,
+        text: word,
+        message: `Possible spelling error`,
+        suggestion: COMMON_MISSPELLINGS[lowerWord],
         severity: 'error'
       });
     }
-  }
+
+    currentIndex = wordIndex + word.length;
+  });
 
   return errors;
 }
 
 /**
- * Detect grammar and mechanics errors
+ * Analyze text for grammar errors
  */
-export function detectGrammarErrors(text: string): TextError[] {
+function detectGrammarErrors(text: string): TextError[] {
   const errors: TextError[] = [];
 
-  for (const pattern of GRAMMAR_PATTERNS) {
-    const matches = text.matchAll(pattern.pattern);
+  GRAMMAR_PATTERNS.forEach(pattern => {
+    let match;
+    const regex = new RegExp(pattern.pattern.source, pattern.pattern.flags);
 
-    for (const match of matches) {
-      if (pattern.check(match[0])) {
-        const startIndex = match.index!;
-        errors.push({
-          id: `grammar-${startIndex}`,
-          category: 'grammar',
-          startIndex,
-          endIndex: startIndex + match[0].length,
-          text: match[0],
-          message: pattern.message,
-          severity: 'warning'
-        });
+    while ((match = regex.exec(text)) !== null) {
+      const matchText = match[0];
+      const startIndex = match.index;
+      const endIndex = startIndex + matchText.length;
+
+      let suggestion: string | undefined;
+      if (typeof pattern.suggestion === 'function') {
+        suggestion = pattern.suggestion(matchText);
       }
+
+      errors.push({
+        id: generateErrorId('grammar', startIndex, endIndex),
+        category: 'grammar',
+        startIndex,
+        endIndex,
+        text: matchText,
+        message: pattern.message,
+        suggestion,
+        severity: 'error'
+      });
     }
-  }
+  });
 
   return errors;
 }
 
 /**
- * Detect style and clarity issues
+ * Analyze text for style issues
  */
-export function detectStyleIssues(text: string): TextError[] {
+function detectStyleIssues(text: string): TextError[] {
   const errors: TextError[] = [];
 
-  for (const pattern of STYLE_PATTERNS) {
-    const matches = text.matchAll(pattern.pattern);
+  STYLE_PATTERNS.forEach(pattern => {
+    let match;
+    const regex = new RegExp(pattern.pattern.source, pattern.pattern.flags);
 
-    for (const match of matches) {
-      const startIndex = match.index!;
+    while ((match = regex.exec(text)) !== null) {
+      const matchText = match[0];
+      const startIndex = match.index;
+      const endIndex = startIndex + matchText.length;
+
       errors.push({
-        id: `style-${startIndex}-${pattern.type}`,
+        id: generateErrorId('style', startIndex, endIndex),
         category: 'style',
         startIndex,
-        endIndex: startIndex + match[0].length,
-        text: match[0],
+        endIndex,
+        text: matchText,
         message: pattern.message,
+        suggestion: pattern.suggestion || undefined,
         severity: 'suggestion'
       });
     }
-  }
+  });
 
   return errors;
 }
 
 /**
- * Main function to analyze text and return all errors
+ * Main analysis function
  */
 export function analyzeTextForErrors(text: string): TextError[] {
   if (!text || text.trim().length === 0) {
@@ -222,107 +275,13 @@ export function analyzeTextForErrors(text: string): TextError[] {
   const grammarErrors = detectGrammarErrors(text);
   const styleIssues = detectStyleIssues(text);
 
-  // Combine and sort by position
+  // Combine and sort by start index
   const allErrors = [...spellingErrors, ...grammarErrors, ...styleIssues];
-  allErrors.sort((a, b) => a.startIndex - b.startIndex);
-
-  return allErrors;
+  return allErrors.sort((a, b) => a.startIndex - b.startIndex);
 }
 
 /**
- * Get color and style for error category
- */
-export function getErrorStyle(category: ErrorCategory): { color: string; underlineStyle: string; className: string } {
-  switch (category) {
-    case 'spelling':
-      return {
-        color: '#ef4444',
-        underlineStyle: 'wavy',
-        className: 'error-highlight-spelling'
-      };
-    case 'grammar':
-      return {
-        color: '#3b82f6',
-        underlineStyle: 'wavy',
-        className: 'error-highlight-grammar'
-      };
-    case 'style':
-      return {
-        color: '#f97316',
-        underlineStyle: 'dotted',
-        className: 'error-highlight-style'
-      };
-  }
-}
-
-/**
- * Convert text with errors into highlighted HTML
- */
-export function generateHighlightedHTML(text: string, errors: TextError[]): string {
-  if (errors.length === 0) {
-    return escapeHtml(text);
-  }
-
-  let html = '';
-  let lastIndex = 0;
-
-  // Sort errors by start index to process them in order
-  const sortedErrors = [...errors].sort((a, b) => a.startIndex - b.startIndex);
-
-  for (const error of sortedErrors) {
-    // Add text before error
-    html += escapeHtml(text.substring(lastIndex, error.startIndex));
-
-    // Add highlighted error
-    const style = getErrorStyle(error.category);
-    html += `<span class="error-highlight ${style.className}" data-error-id="${error.id}" data-category="${error.category}" style="text-decoration: underline ${style.underlineStyle}; text-decoration-color: ${style.color}; cursor: pointer;">`;
-    html += escapeHtml(text.substring(error.startIndex, error.endIndex));
-    html += '</span>';
-
-    lastIndex = error.endIndex;
-  }
-
-  // Add remaining text
-  html += escapeHtml(text.substring(lastIndex));
-
-  return html;
-}
-
-/**
- * Escape HTML special characters
- */
-function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-/**
- * Find error by position in text
- */
-export function findErrorAtPosition(errors: TextError[], position: number): TextError | null {
-  return errors.find(error =>
-    position >= error.startIndex && position < error.endIndex
-  ) || null;
-}
-
-/**
- * Group errors by category for sidebar display
- */
-export function groupErrorsByCategory(errors: TextError[]): {
-  spelling: TextError[];
-  grammar: TextError[];
-  style: TextError[];
-} {
-  return {
-    spelling: errors.filter(e => e.category === 'spelling'),
-    grammar: errors.filter(e => e.category === 'grammar'),
-    style: errors.filter(e => e.category === 'style')
-  };
-}
-
-/**
- * Debounce function for performance optimization
+ * Debounce utility
  */
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
@@ -341,4 +300,36 @@ export function debounce<T extends (...args: any[]) => any>(
     }
     timeout = setTimeout(later, wait);
   };
+}
+
+/**
+ * Get category label
+ */
+export function getCategoryLabel(category: ErrorCategory): string {
+  switch (category) {
+    case 'spelling':
+      return 'Spelling';
+    case 'grammar':
+      return 'Grammar & Mechanics';
+    case 'style':
+      return 'Style & Clarity';
+    default:
+      return 'Error';
+  }
+}
+
+/**
+ * Get severity badge color
+ */
+export function getSeverityColor(severity: 'error' | 'warning' | 'suggestion'): string {
+  switch (severity) {
+    case 'error':
+      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+    case 'warning':
+      return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+    case 'suggestion':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+  }
 }
