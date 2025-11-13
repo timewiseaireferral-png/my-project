@@ -1084,10 +1084,18 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         {/* Writing Area - Takes remaining space */}
         <div className="flex-1 overflow-y-auto p-3">
           <div className="relative h-full">
-            {/* Highlight Layer (Behind textarea) */}
+            {/* Background Layer (Bottom) */}
+            <div
+              className={`absolute inset-0 rounded-xl ${
+                darkMode ? 'bg-slate-900' : 'bg-white'
+              }`}
+              style={{ zIndex: 0 }}
+            />
+
+            {/* Highlight Layer (Middle - shows underlines) */}
             <div
               ref={highlightContainerRef}
-              className="absolute inset-0 pointer-events-none overflow-hidden"
+              className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl"
               style={{
                 padding: '16px',
                 fontFamily,
@@ -1108,7 +1116,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               />
             </div>
 
-            {/* Textarea (On Top of highlights) */}
+            {/* Textarea (Top - transparent to show underlines) */}
             <textarea
               ref={textareaRef}
               value={localContent}
@@ -1116,15 +1124,16 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               onScroll={handleScroll}
               className={`relative w-full h-full resize-none p-4 rounded-xl shadow-lg transition-all duration-300 text-base leading-relaxed focus:outline-none ${
                 darkMode
-                  ? 'bg-slate-900/90 text-gray-100 placeholder-gray-500 border-2 border-slate-700 focus:border-cyan-500 focus:shadow-cyan-500/20'
-                  : 'bg-white/90 text-gray-800 placeholder-gray-400 border-2 border-gray-200 focus:border-blue-500 focus:shadow-blue-500/20'
+                  ? 'text-gray-100 placeholder-gray-500 border-2 border-slate-700 focus:border-cyan-500 focus:shadow-cyan-500/20'
+                  : 'text-gray-800 placeholder-gray-400 border-2 border-gray-200 focus:border-blue-500 focus:shadow-blue-500/20'
               }`}
               style={{
                 fontFamily,
                 fontSize: `${fontSize}px`,
                 lineHeight: lineHeight.toString(),
                 zIndex: 2,
-                background: darkMode ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)'
+                background: 'transparent',
+                caretColor: darkMode ? '#fff' : '#000'
               }}
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
             />
