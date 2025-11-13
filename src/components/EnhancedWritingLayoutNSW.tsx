@@ -12,6 +12,7 @@ import { NSWSubmitButton } from './NSWSubmitButton';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { InlineTextHighlighter } from './InlineTextHighlighter';
 import { InlineErrorHighlighter } from './InlineErrorHighlighter';
+import { ErrorHighlightLegend } from './ErrorHighlightLegend';
 import { TextError } from '../lib/realtimeErrorDetection';
 import { generatePrompt } from '../lib/openai';
 import { promptConfig } from '../config/prompts';
@@ -1083,6 +1084,17 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
         {/* Writing Area - Takes remaining space */}
         <div className="flex-1 overflow-y-auto p-3">
+          {/* Error Highlight Legend */}
+          {detectedErrors.length > 0 && (
+            <div className="mb-3">
+              <ErrorHighlightLegend
+                darkMode={darkMode}
+                compact={true}
+                showCloseButton={false}
+              />
+            </div>
+          )}
+
           <div className="relative h-full">
             {/* Background Layer (Bottom) */}
             <div

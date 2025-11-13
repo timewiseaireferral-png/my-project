@@ -45,6 +45,13 @@ const COMMON_MISSPELLINGS: { [key: string]: string } = {
   'wierd': 'weird',
   'freind': 'friend',
   'maintainance': 'maintenance',
+  'athmosphere': 'atmosphere',
+  'desided': 'decided',
+  'grabed': 'grabbed',
+  'runned': 'ran',
+  'hisself': 'himself',
+  'theirself': 'themselves',
+  'ourself': 'ourselves',
 };
 
 // Grammar patterns to detect
@@ -63,6 +70,36 @@ const GRAMMAR_PATTERNS = [
         'is': 'are'
       };
       return `${parts[0]} ${verbMap[verb] || verb}`;
+    }
+  },
+  {
+    pattern: /\b(The|A|An)\s+(\w+)\s+(boy|girl|man|woman|person|child|student|teacher),\s+(he|she|it|they)\s+(was|is|were|are)\b/gi,
+    message: 'Redundant pronoun. Remove the comma and pronoun.',
+    suggestion: (match: string) => {
+      const parts = match.split(',')[0];
+      return parts;
+    }
+  },
+  {
+    pattern: /\bwho's\s+(name|job|house|car|book|idea|turn|fault)\b/gi,
+    message: 'Should be "whose" (possessive), not "who\'s" (who is)',
+    suggestion: (match: string) => match.replace(/who's/gi, 'whose')
+  },
+  {
+    pattern: /\b(he|she|it|I|you|we|they)\s+(cross|finish|start|walk|talk|jump|run)\s+(the|a|an)\b/gi,
+    message: 'Verb tense error. Add -ed for past tense.',
+    suggestion: (match: string) => {
+      const parts = match.split(/\s+/);
+      const verb = parts[1];
+      return `${parts[0]} ${verb}ed ${parts[2]}`;
+    }
+  },
+  {
+    pattern: /\b(more|most)\s+(faster|slower|bigger|smaller|better|worse)\b/gi,
+    message: 'Double comparative. Use either "more" or "-er", not both.',
+    suggestion: (match: string) => {
+      const parts = match.split(/\s+/);
+      return parts[1];
     }
   },
   {
