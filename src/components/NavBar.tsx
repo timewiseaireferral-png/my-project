@@ -3,8 +3,9 @@ import { User } from '@supabase/supabase-js';
 import { useLearning } from '../contexts/LearningContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
 import { Link } from 'react-router-dom';
-import { LogOut, Menu, X, ChevronDown, Home, Sparkles, Users, HelpCircle, BookOpen, Star, Brain, Target } from 'lucide-react';
+import { LogOut, Menu, X, ChevronDown, Home, Sparkles, Users, HelpCircle, BookOpen, Star, Brain, Target, Lock, Crown } from 'lucide-react';
 
 interface NavBarProps {
   activePage: string;
@@ -26,7 +27,9 @@ export function NavBar({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLearningMenuOpen, setIsLearningMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { progress } = useLearning();
+  const { isPro } = useSubscription();
   // Dark mode removed
 
   // Use ref to prevent multiple simultaneous sign out attempts
@@ -162,20 +165,43 @@ export function NavBar({
                   <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
                     {learningItems.map((item) => {
                       const Icon = item.icon;
+                      const isLearningJourney = item.id === 'learning';
+                      const isLocked = isLearningJourney && !isPro;
+
                       return (
                         <button
                           key={item.id}
                           onClick={() => {
-                            onNavigate(item.id);
-                            setIsLearningMenuOpen(false);
+                            if (isLocked) {
+                              setShowUpgradeModal(true);
+                              setIsLearningMenuOpen(false);
+                            } else {
+                              onNavigate(item.id);
+                              setIsLearningMenuOpen(false);
+                            }
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-indigo-50 flex items-start space-x-3 transition-colors duration-200"
+                          className={`w-full px-4 py-3 text-left flex items-start space-x-3 transition-colors duration-200 relative ${
+                            isLocked ? 'opacity-60 hover:bg-amber-50' : 'hover:bg-indigo-50'
+                          }`}
                         >
-                          <Icon className="w-5 h-5 text-indigo-600 mt-0.5" />
-                          <div>
-                            <div className="font-medium text-gray-900">{item.name}</div>
+                          <Icon className={`w-5 h-5 mt-0.5 ${
+                            isLocked ? 'text-amber-600' : 'text-indigo-600'
+                          }`} />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-900">{item.name}</span>
+                              {isLocked && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold">
+                                  <Crown className="w-3 h-3" />
+                                  PRO
+                                </span>
+                              )}
+                            </div>
                             <div className="text-sm text-gray-500">{item.description}</div>
                           </div>
+                          {isLocked && (
+                            <Lock className="w-4 h-4 text-amber-600 mt-0.5" />
+                          )}
                         </button>
                       );
                     })}
@@ -319,20 +345,43 @@ export function NavBar({
                     </div>
                     {learningItems.map((item) => {
                       const Icon = item.icon;
+                      const isLearningJourney = item.id === 'learning';
+                      const isLocked = isLearningJourney && !isPro;
+
                       return (
                         <button
                           key={item.id}
                           onClick={() => {
-                            onNavigate(item.id);
-                            setIsLearningMenuOpen(false);
+                            if (isLocked) {
+                              setShowUpgradeModal(true);
+                              setIsMenuOpen(false);
+                            } else {
+                              onNavigate(item.id);
+                              setIsMenuOpen(false);
+                            }
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-indigo-50 flex items-start space-x-3 transition-colors duration-200"
+                          className={`w-full px-4 py-3 text-left flex items-start space-x-3 transition-colors duration-200 relative ${
+                            isLocked ? 'opacity-60 hover:bg-amber-50' : 'hover:bg-indigo-50'
+                          }`}
                         >
-                          <Icon className="w-5 h-5 text-indigo-600 mt-0.5" />
-                          <div>
-                            <div className="font-medium text-gray-900">{item.name}</div>
+                          <Icon className={`w-5 h-5 mt-0.5 ${
+                            isLocked ? 'text-amber-600' : 'text-indigo-600'
+                          }`} />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-900">{item.name}</span>
+                              {isLocked && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold">
+                                  <Crown className="w-3 h-3" />
+                                  PRO
+                                </span>
+                              )}
+                            </div>
                             <div className="text-sm text-gray-500">{item.description}</div>
                           </div>
+                          {isLocked && (
+                            <Lock className="w-4 h-4 text-amber-600 mt-0.5" />
+                          )}
                         </button>
                       );
                     })}
@@ -394,6 +443,80 @@ export function NavBar({
           </div>
         )}
       </div>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => setShowUpgradeModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Crown className="w-8 h-8 text-white" />
+              </div>
+
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Upgrade to Pro
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Learning Mode is a premium feature available to Pro members
+              </p>
+
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-4 mb-6 text-left">
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-amber-600" />
+                  What you'll get:
+                </h3>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5">✓</span>
+                    <span>Structured learning paths with 50+ lessons</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5">✓</span>
+                    <span>Interactive quizzes and practice exercises</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5">✓</span>
+                    <span>Progress tracking and achievement badges</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5">✓</span>
+                    <span>Personalized learning recommendations</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5">✓</span>
+                    <span>Unlimited AI coaching and feedback</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    setShowUpgradeModal(false);
+                    onNavigate('pricing');
+                  }}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  View Pro Plans
+                </button>
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200"
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
