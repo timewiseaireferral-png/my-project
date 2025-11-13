@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen, AlertCircle, Loader2, FileCheck, Sparkles, AlignLeft, ChevronUp, ChevronDown, ChevronRight } from 'lucide-react';
+import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen, AlertCircle, Loader2, FileCheck, Sparkles, AlignLeft, ChevronUp, ChevronDown, ChevronRight, Zap } from 'lucide-react';
+import { analyzeVocabularyRealtime, type VocabularyAnalysis } from '../lib/realtimeVocabularyAnalyzer';
+import { analyzeSentencesRealtime, type SentenceAnalysis } from '../lib/realtimeSentenceAnalyzer';
+import { analyzeStoryStructureRealtime, type StoryStructureAnalysis } from '../lib/realtimeStoryStructure';
+import { analyzePacingRealtime, type PacingAnalysis } from '../lib/realtimePacingAnalyzer';
 import { StepByStepWritingBuilder } from './StepByStepWritingBuilder';
 import { ContextualAICoachPanel } from './ContextualAICoachPanel';
 import { ComprehensiveFeedbackDisplay } from './ComprehensiveFeedbackDisplay';
@@ -420,6 +424,12 @@ export const EnhancedCoachPanel = ({
   const [isLoadingVocabulary, setIsLoadingVocabulary] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
 
+  // Real-time analysis states (after 50 words)
+  const [realtimeVocab, setRealtimeVocab] = useState<VocabularyAnalysis | null>(null);
+  const [realtimeSentences, setRealtimeSentences] = useState<SentenceAnalysis | null>(null);
+  const [realtimeStructure, setRealtimeStructure] = useState<StoryStructureAnalysis | null>(null);
+  const [realtimePacing, setRealtimePacing] = useState<PacingAnalysis | null>(null);
+
   // Scroll to bottom of messages
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -564,6 +574,33 @@ export const EnhancedCoachPanel = ({
 
     return () => clearTimeout(timer);
   }, [content, prompt, textType, user?.id]);
+
+  // Real-time analysis of content (after 50 words)
+  useEffect(() => {
+    const wordCount = content?.trim().split(/\s+/).filter(w => w.length > 0).length || 0;
+
+    // Only analyze if 50+ words
+    if (wordCount >= 50 && content) {
+      const timer = setTimeout(() => {
+        try {
+          setRealtimeVocab(analyzeVocabularyRealtime(content, textType || 'narrative'));
+          setRealtimeSentences(analyzeSentencesRealtime(content));
+          setRealtimeStructure(analyzeStoryStructureRealtime(content, textType || 'narrative'));
+          setRealtimePacing(analyzePacingRealtime(content, textType || 'narrative'));
+        } catch (error) {
+          console.error('Error in real-time analysis:', error);
+        }
+      }, 1000); // 1 second debounce
+
+      return () => clearTimeout(timer);
+    } else {
+      // Clear analyses if under 50 words
+      setRealtimeVocab(null);
+      setRealtimeSentences(null);
+      setRealtimeStructure(null);
+      setRealtimePacing(null);
+    }
+  }, [content, textType]);
 
   const handleSendMessage = async (quickMessage?: string) => {
     const messageToSend = quickMessage || inputMessage.trim();
@@ -1432,6 +1469,152 @@ export const EnhancedCoachPanel = ({
               darkMode={darkMode}
             />
 
+            {/* Real-time Story Structure (50+ words) */}
+            {realtimeStructure && realtimeStructure.wordCount >= 50 && (
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="text-md font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-blue-500" />
+                  Story Structure
+                </h3>
+
+                {/* Progress Bar */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-2">
+                    <span>{realtimeStructure.currentStage.name}</span>
+                    <span>{realtimeStructure.overallProgress}% Complete</span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-300"
+                      style={{ width: `${realtimeStructure.overallProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{realtimeStructure.feedback}</p>
+                </div>
+
+                {/* Current Stage */}
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700 mb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-bold text-blue-700 dark:text-blue-300">Current Stage</h4>
+                    <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded">
+                      {realtimeStructure.currentStage.progress}%
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-700 dark:text-gray-300 mb-2">{realtimeStructure.currentStage.description}</p>
+                  <ul className="space-y-1">
+                    {realtimeStructure.currentStage.tips.map((tip, i) => (
+                      <li key={i} className="text-xs text-gray-600 dark:text-gray-400">• {tip}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Next Milestone */}
+                {realtimeStructure.nextMilestone.wordsNeeded > 0 && (
+                  <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Target className="w-4 h-4 text-purple-500" />
+                      <h4 className="text-sm font-bold text-purple-700 dark:text-purple-300">Next Milestone</h4>
+                    </div>
+                    <p className="text-xs text-gray-700 dark:text-gray-300">
+                      <strong>{realtimeStructure.nextMilestone.wordsNeeded} more words</strong> to {realtimeStructure.nextMilestone.description}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Real-time Pacing & Engagement (50+ words) */}
+            {realtimePacing && realtimePacing.paceScore > 0 && (
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="text-md font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-orange-500" />
+                  Pacing & Engagement
+                </h3>
+
+                {/* Overall Pace */}
+                <div className={`p-3 rounded-lg border-2 mb-3 ${
+                  realtimePacing.paceScore >= 4 ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700' :
+                  realtimePacing.paceScore >= 3 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' :
+                  'bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700'
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">Overall Pace</span>
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${i < realtimePacing.paceScore ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-700 dark:text-gray-300">{realtimePacing.feedback}</p>
+                </div>
+
+                {/* Details */}
+                <div className="space-y-2">
+                  <div className="p-2 bg-white dark:bg-slate-800 rounded border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Sentence Rhythm</span>
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < realtimePacing.details.sentenceRhythm.score ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{realtimePacing.details.sentenceRhythm.feedback}</p>
+                  </div>
+
+                  <div className="p-2 bg-white dark:bg-slate-800 rounded border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Paragraph Balance</span>
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < realtimePacing.details.paragraphBalance.score ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{realtimePacing.details.paragraphBalance.feedback}</p>
+                  </div>
+
+                  <div className="p-2 bg-white dark:bg-slate-800 rounded border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Reader Engagement</span>
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < realtimePacing.details.engagement.score ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{realtimePacing.details.engagement.feedback}</p>
+                  </div>
+                </div>
+
+                {/* Strengths & Suggestions */}
+                {realtimePacing.strengths.length > 0 && (
+                  <div className="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-700">
+                    <p className="text-xs font-bold text-green-700 dark:text-green-300 mb-1">Strengths</p>
+                    <ul className="space-y-0.5">
+                      {realtimePacing.strengths.map((s, i) => (
+                        <li key={i} className="text-xs text-gray-700 dark:text-gray-300">{s}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {realtimePacing.suggestions.length > 0 && (
+                  <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700">
+                    <p className="text-xs font-bold text-blue-700 dark:text-blue-300 mb-1">Tips</p>
+                    <ul className="space-y-0.5">
+                      {realtimePacing.suggestions.map((s, i) => (
+                        <li key={i} className="text-xs text-gray-700 dark:text-gray-300">• {s}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Comprehensive Feedback - Shows after analysis */}
             {comprehensiveFeedback && (
               <div className="mt-4">
@@ -1460,49 +1643,242 @@ export const EnhancedCoachPanel = ({
             darkMode={darkMode}
           />
         ) : currentView === 'vocabulary' ? (
-          <div className="p-3 overflow-y-auto h-full">
-            <h3 className="text-lg font-bold mb-3 text-gray-900 dark:text-white flex items-center justify-between">
-              <span>Power Vocabulary</span>
-              {isLoadingVocabulary && <Loader2 className="w-5 h-5 animate-spin text-pink-500" />}
-            </h3>
-            <div className="space-y-3">
-              {isLoadingVocabulary ? (
-                <div className="p-6 text-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-pink-500 mx-auto mb-3" />
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">{AI_COACH_CONFIG.messages.loading.vocabulary}</p>
-                </div>
-              ) : dynamicVocabulary && dynamicVocabulary.length > 0 ? (
-                dynamicVocabulary.map((vocab, index) => (
-                  <div key={index} className="p-4 bg-white dark:bg-slate-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-bold text-lg text-pink-600 dark:text-pink-400">{vocab.word}</h4>
-                      <Sparkles className="w-5 h-5 text-pink-500" />
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{vocab.definition}</p>
-                    <div className="bg-pink-50 dark:bg-pink-900/20 p-3 rounded border border-pink-200 dark:border-pink-800 mb-2">
-                      <p className="text-xs font-medium text-pink-800 dark:text-pink-300 mb-1">Example:</p>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 italic">"{vocab.example}"</p>
-                    </div>
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-200 dark:border-blue-800">
-                      <p className="text-xs text-blue-800 dark:text-blue-300">
-                        <strong>💡 Use it here:</strong> {vocab.contextRelevance}
-                      </p>
+          <div className="h-full flex flex-col overflow-hidden">
+            {/* Real-time Vocabulary Analysis (50+ words) */}
+            {realtimeVocab && realtimeVocab.wordCount >= 50 ? (
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* Vocabulary Score Header */}
+                <div className={`p-4 rounded-lg border-2 ${
+                  realtimeVocab.vocabularyScore >= 4 ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700' :
+                  realtimeVocab.vocabularyScore >= 3 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' :
+                  'bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700'
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Power Vocabulary</h3>
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${i < realtimeVocab.vocabularyScore ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
+                        />
+                      ))}
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="p-6 text-center">
-                  <Sparkles className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">{AI_COACH_CONFIG.messages.empty.vocabulary}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{realtimeVocab.feedback}</p>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-white dark:bg-slate-800 p-2 rounded">
+                      <p className="text-gray-500 dark:text-gray-400">Unique Words</p>
+                      <p className="font-bold text-lg">{realtimeVocab.uniqueWords}</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-2 rounded">
+                      <p className="text-gray-500 dark:text-gray-400">Sophisticated</p>
+                      <p className="font-bold text-lg">{realtimeVocab.sophisticatedWords.length}</p>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
+
+                {/* Vocabulary Suggestions */}
+                {realtimeVocab.suggestions.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-pink-500" />
+                      Upgrade Your Words
+                    </h4>
+                    <div className="space-y-3">
+                      {realtimeVocab.suggestions.map((vocab, index) => (
+                        <div key={index} className="p-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                          <div className="flex items-start justify-between mb-2">
+                            <h5 className="font-bold text-base text-pink-600 dark:text-pink-400">{vocab.word}</h5>
+                            <span className={`text-xs px-2 py-0.5 rounded ${
+                              vocab.sophisticationLevel === 'advanced' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' :
+                              vocab.sophisticationLevel === 'intermediate' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
+                              'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                            }`}>
+                              {vocab.sophisticationLevel}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{vocab.definition}</p>
+                          <div className="bg-pink-50 dark:bg-pink-900/20 p-2 rounded border border-pink-200 dark:border-pink-800 mb-2">
+                            <p className="text-xs text-gray-700 dark:text-gray-300 italic">"{vocab.example}"</p>
+                          </div>
+                          <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-200 dark:border-blue-800">
+                            <p className="text-xs text-blue-800 dark:text-blue-300">
+                              <strong>💡</strong> {vocab.contextRelevance}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Overused Words Warning */}
+                {realtimeVocab.overusedWords.length > 0 && (
+                  <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-700">
+                    <h4 className="text-sm font-bold text-orange-700 dark:text-orange-300 mb-2 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      Watch Out: Overused Words
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {realtimeVocab.overusedWords.map((item, i) => (
+                        <span key={i} className="px-2 py-1 bg-white dark:bg-slate-800 rounded text-xs">
+                          <strong>{item.word}</strong> <span className="text-orange-600 dark:text-orange-400">(×{item.count})</span>
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Try using synonyms to add variety</p>
+                  </div>
+                )}
+
+                {/* Sophisticated Words Used */}
+                {realtimeVocab.sophisticatedWords.length > 0 && (
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                    <h4 className="text-sm font-bold text-green-700 dark:text-green-300 mb-2 flex items-center gap-2">
+                      <Award className="w-4 h-4" />
+                      Great Vocabulary!
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {realtimeVocab.sophisticatedWords.map((word, i) => (
+                        <span key={i} className="px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded text-xs font-medium">
+                          {word}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center p-6">
+                <div className="text-center">
+                  <Sparkles className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                    {wordCount < 50
+                      ? `Write ${50 - wordCount} more words to unlock vocabulary suggestions!`
+                      : 'Start writing to see vocabulary suggestions'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         ) : currentView === 'sentences' ? (
-          <SentenceStructurePanel
-            content={content}
-            darkMode={darkMode}
-          />
+          <div className="h-full flex flex-col overflow-hidden">
+            {/* Real-time Sentence Analysis (50+ words) */}
+            {realtimeSentences && realtimeSentences.totalSentences > 0 ? (
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* Sentence Variety Score Header */}
+                <div className={`p-4 rounded-lg border-2 ${
+                  realtimeSentences.variety.score >= 4 ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700' :
+                  realtimeSentences.variety.score >= 3 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' :
+                  'bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700'
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Sentence Variety</h3>
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${i < realtimeSentences.variety.score ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{realtimeSentences.variety.feedback}</p>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                    <div className="bg-white dark:bg-slate-800 p-2 rounded text-center">
+                      <p className="text-gray-500 dark:text-gray-400">Total</p>
+                      <p className="font-bold text-lg">{realtimeSentences.totalSentences}</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-2 rounded text-center">
+                      <p className="text-gray-500 dark:text-gray-400">Avg Length</p>
+                      <p className="font-bold text-lg">{realtimeSentences.averageLength}</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-2 rounded text-center">
+                      <p className="text-gray-500 dark:text-gray-400">Issues</p>
+                      <p className="font-bold text-lg">{realtimeSentences.issues.length}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sentence Patterns */}
+                <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Sentence Types Used</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Simple</span>
+                      <span className="text-sm font-semibold">{realtimeSentences.patterns.simple}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Compound</span>
+                      <span className="text-sm font-semibold">{realtimeSentences.patterns.compound}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Complex</span>
+                      <span className="text-sm font-semibold">{realtimeSentences.patterns.complex}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Strengths */}
+                {realtimeSentences.strengths.length > 0 && (
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                    <h4 className="text-sm font-bold text-green-700 dark:text-green-300 mb-2 flex items-center gap-2">
+                      <Award className="w-4 h-4" />
+                      Strengths
+                    </h4>
+                    <ul className="space-y-1">
+                      {realtimeSentences.strengths.map((strength, i) => (
+                        <li key={i} className="text-xs text-gray-700 dark:text-gray-300">{strength}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Issues */}
+                {realtimeSentences.issues.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      Areas to Improve ({realtimeSentences.issues.length})
+                    </h4>
+                    <div className="space-y-2">
+                      {realtimeSentences.issues.map((issue, i) => (
+                        <div key={i} className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-700">
+                          <p className="text-xs font-mono bg-white dark:bg-slate-800 px-2 py-1 rounded mb-2">"{issue.sentence}"</p>
+                          <p className="text-xs text-gray-700 dark:text-gray-300">{issue.suggestion}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Suggestions */}
+                {realtimeSentences.suggestions.length > 0 && (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <h4 className="text-sm font-bold text-blue-700 dark:text-blue-300 mb-2 flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4" />
+                      Tips to Improve
+                    </h4>
+                    <ul className="space-y-1">
+                      {realtimeSentences.suggestions.map((suggestion, i) => (
+                        <li key={i} className="text-xs text-gray-700 dark:text-gray-300">• {suggestion}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center p-6">
+                <div className="text-center">
+                  <AlignLeft className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                    {wordCount < 50
+                      ? `Write ${50 - wordCount} more words to unlock sentence analysis!`
+                      : 'Start writing to see sentence analysis'}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         ) : null}
       </div>
     </div>
